@@ -37,55 +37,55 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-indigo-900">LefimovArt</h1>
+          <h1 className="text-4xl font-bold text-foreground">LefimovArt</h1>
           <div className="text-right">
-            <p className="text-lg font-semibold text-indigo-900">{user?.email}</p>
-            <p className="text-sm text-indigo-700">💰 {user?.credits} credits</p>
-            <button onClick={logout} className="text-red-600 text-sm hover:underline mt-1">Logout</button>
+            <p className="text-lg font-semibold text-foreground">{user?.email}</p>
+            <p className="text-sm text-primary">{user?.credits} credits</p>
+            <button onClick={logout} className="text-red-400 text-sm hover:underline mt-1">Logout</button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <button onClick={() => navigate('/gallery')} className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition">
+          <button onClick={() => navigate('/gallery')} className="bg-card rounded-lg p-6 shadow-md shadow-black/10 hover:shadow-lg border border-border transition text-left">
             <span className="text-3xl">🖼️</span>
-            <h3 className="font-bold mt-2">Image Gallery</h3>
-            <p className="text-sm text-gray-600">View your generated images</p>
+            <h3 className="font-bold mt-2 text-foreground">Image Gallery</h3>
+            <p className="text-sm text-muted-foreground">View your generated images</p>
           </button>
-          <button onClick={() => navigate('/generate-video')} className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition">
+          <button onClick={() => navigate('/generate-video')} className="bg-card rounded-lg p-6 shadow-md shadow-black/10 hover:shadow-lg border border-border transition text-left">
             <span className="text-3xl">🎬</span>
-            <h3 className="font-bold mt-2">Generate Video</h3>
-            <p className="text-sm text-gray-600">Create AI videos</p>
+            <h3 className="font-bold mt-2 text-foreground">Generate Video</h3>
+            <p className="text-sm text-muted-foreground">Create AI videos</p>
           </button>
-          <button onClick={() => navigate('/videos')} className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition">
+          <button onClick={() => navigate('/videos')} className="bg-card rounded-lg p-6 shadow-md shadow-black/10 hover:shadow-lg border border-border transition text-left">
             <span className="text-3xl">📹</span>
-            <h3 className="font-bold mt-2">Video Gallery</h3>
-            <p className="text-sm text-gray-600">View your videos</p>
+            <h3 className="font-bold mt-2 text-foreground">Video Gallery</h3>
+            <p className="text-sm text-muted-foreground">View your videos</p>
           </button>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-          <h2 className="text-2xl font-bold mb-6">Generate Image with AI</h2>
+        <div className="bg-card rounded-2xl shadow-lg shadow-black/10 p-8 border border-border">
+          <h2 className="text-2xl font-bold mb-6 text-foreground">Generate Image with AI</h2>
           
           <form onSubmit={handleGenerate} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold mb-2">Your Prompt</label>
+              <label className="block text-sm font-semibold mb-2 text-foreground">Your Prompt</label>
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="Describe the image you want to generate..."
-                className="w-full h-32 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full h-32 px-4 py-2 bg-muted border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold mb-2">Resolution</label>
+              <label className="block text-sm font-semibold mb-2 text-foreground">Resolution</label>
               <select
                 value={resolution}
                 onChange={(e) => setResolution(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-2 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="512">512x512 (2 credits)</option>
                 <option value="1024">1024x1024 (4 credits)</option>
@@ -95,7 +95,7 @@ export default function Home() {
             <button
               type="submit"
               disabled={loading || !prompt.trim() || user.credits < 2}
-              className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-lg hover:opacity-90 disabled:opacity-50"
             >
               {loading ? 'Generating...' : 'Generate Image'}
             </button>

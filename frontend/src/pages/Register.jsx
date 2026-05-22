@@ -31,10 +31,10 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-2">LefimovArt</h1>
-        <p className="text-center text-gray-600 mb-8">Create Your Account</p>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="bg-card rounded-2xl shadow-xl shadow-black/20 p-8 w-full max-w-md border border-border">
+        <h1 className="text-3xl font-bold text-center mb-2 text-foreground">LefimovArt</h1>
+        <p className="text-center text-muted-foreground mb-8">Create Your Account</p>
         
         <form onSubmit={handleRegister} className="space-y-4">
           <input
@@ -42,14 +42,14 @@ export default function Register() {
             placeholder="Full Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 bg-muted border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 bg-muted border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             required
           />
           <input
@@ -57,20 +57,20 @@ export default function Register() {
             placeholder="Password (min 8 chars)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 bg-muted border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             required
           />
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="w-full bg-primary text-primary-foreground font-bold py-2 rounded-lg hover:opacity-90 disabled:opacity-50"
           >
             {loading ? 'Creating...' : 'Register'}
           </button>
         </form>
 
-        <p className="text-center mt-6 text-gray-600">
-          Already have an account? <Link to="/login" className="text-blue-600 font-bold hover:underline">Sign In</Link>
+        <p className="text-center mt-6 text-muted-foreground">
+          Already have an account? <Link to="/login" className="text-primary font-bold hover:underline">Sign In</Link>
         </p>
       </div>
     </div>

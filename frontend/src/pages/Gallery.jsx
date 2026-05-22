@@ -48,32 +48,32 @@ export default function Gallery() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/')} className="text-blue-600 font-bold hover:underline">&larr; Home</button>
-            <h1 className="text-3xl font-bold">Image Gallery</h1>
+            <button onClick={() => navigate('/')} className="text-primary font-bold hover:underline">&larr; Home</button>
+            <h1 className="text-3xl font-bold text-foreground">Image Gallery</h1>
           </div>
-          <button onClick={logout} className="text-red-600 font-bold">Logout</button>
+          <button onClick={logout} className="text-red-400 font-bold">Logout</button>
         </div>
 
         {loading ? (
-          <div className="flex justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500"></div></div>
+          <div className="flex justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div></div>
         ) : images.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">No images yet. Start generating!</p>
+            <p className="text-muted-foreground text-lg">No images yet. Start generating!</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {images.map(img => (
-              <div key={img.id} className="bg-white rounded-lg overflow-hidden shadow hover:shadow-lg transition">
+              <div key={img.id} className="bg-card rounded-lg overflow-hidden shadow shadow-black/10 border border-border hover:shadow-lg transition">
                 <img src={img.image_url} alt={img.prompt} className="w-full h-48 object-cover" />
                 <div className="p-3">
-                  <p className="text-xs text-gray-600 line-clamp-2">{img.prompt}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{img.prompt}</p>
                   <button
                     onClick={() => handleDelete(img.id)}
-                    className="mt-2 text-red-600 text-xs hover:underline font-bold"
+                    className="mt-2 text-red-400 text-xs hover:underline font-bold"
                   >
                     Delete
                   </button>

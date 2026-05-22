@@ -64,44 +64,44 @@ export default function VideoGallery() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/')} className="text-blue-600 font-bold hover:underline">&larr; Home</button>
-            <h1 className="text-3xl font-bold">My Videos</h1>
+            <button onClick={() => navigate('/')} className="text-primary font-bold hover:underline">&larr; Home</button>
+            <h1 className="text-3xl font-bold text-foreground">My Videos</h1>
           </div>
-          <button onClick={logout} className="text-red-600 font-bold">Logout</button>
+          <button onClick={logout} className="text-red-400 font-bold">Logout</button>
         </div>
 
         {loading ? (
-          <div className="flex justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500"></div></div>
+          <div className="flex justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div></div>
         ) : videos.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">No videos yet. Start generating!</p>
+            <p className="text-muted-foreground text-lg">No videos yet. Start generating!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {videos.map(video => (
-              <div key={video.id} className="bg-white rounded-lg overflow-hidden shadow">
-                <div className="bg-gray-200 h-48 flex items-center justify-center">
+              <div key={video.id} className="bg-card rounded-lg overflow-hidden shadow shadow-black/10 border border-border">
+                <div className="bg-muted h-48 flex items-center justify-center">
                   {video.status === 'completed' && video.video_url ? (
                     <video controls className="w-full h-full object-cover" src={video.video_url}></video>
                   ) : video.status === 'failed' ? (
                     <div className="text-center p-4">
-                      <p className="text-red-600 font-bold text-sm">Failed</p>
-                      <p className="text-xs text-gray-500 mt-1">{video.error_message || 'Generation failed'}</p>
+                      <p className="text-red-400 font-bold text-sm">Failed</p>
+                      <p className="text-xs text-muted-foreground mt-1">{video.error_message || 'Generation failed'}</p>
                     </div>
                   ) : (
                     <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500 mx-auto mb-2"></div>
-                      <p className="text-sm text-gray-600">Processing...</p>
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary mx-auto mb-2"></div>
+                      <p className="text-sm text-muted-foreground">Processing...</p>
                     </div>
                   )}
                 </div>
                 <div className="p-3">
-                  <p className="text-xs text-gray-600 line-clamp-2">{video.prompt}</p>
-                  <p className="text-xs mt-2 text-gray-500">Model: {video.model_used}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{video.prompt}</p>
+                  <p className="text-xs mt-2 text-muted-foreground">Model: {video.model_used}</p>
                 </div>
               </div>
             ))}
