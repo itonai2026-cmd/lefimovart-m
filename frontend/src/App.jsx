@@ -13,6 +13,7 @@ import VideoGallery from './pages/VideoGallery';
 import BuyCredits from './pages/BuyCredits';
 import EditImage from './pages/EditImage';
 import ForgotPassword from './pages/ForgotPassword';
+import VerifyEmail from './pages/VerifyEmail';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -60,6 +61,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/verify" element={<VerifyEmail />} />
                 <Route path="*" element={<Navigate to="/login" replace />} />
               </>
             ) : (
