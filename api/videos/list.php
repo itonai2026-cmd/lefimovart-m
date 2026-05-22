@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') { json_response(['error' => 'Method not allowed'], 405); }
 
 $payload = require_auth();
-$user = get_current_user();
+$user = get_authenticated_user();
 global $pdo;
 
 $stmt = $pdo->prepare('SELECT id, prompt, model_used, status, video_url, created_at FROM videos WHERE user_email = ? ORDER BY created_at DESC LIMIT 50');

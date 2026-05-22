@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     json_response(['error' => 'Method not allowed'], 405);
 }
 
-$user = get_current_user();
+$user = get_authenticated_user();
 
 if (!$user) {
     json_response(['error' => 'Unauthorized'], 401);

@@ -50,13 +50,15 @@ scp -r D:\lefimovart-dev\frontend\dist username@itonai.ro:/home/user/public_html
 Create/Edit `.env` in `/wp/lefimovart/`:
 
 ```env
-# API Configuration
-BASE_URL=http://itonai.ro/wp/lefimovart
+# Application Configuration
+APP_ENV=production
+APP_URL=https://itonai.ro
+BASE_PATH=/wp/lefimovart
 
 # Database Configuration
 DB_HOST=localhost
 DB_USER=r133813iton_dacos
-DB_PASSWORD=your_password_here
+DB_PASS=your_password_here
 DB_NAME=r133813iton_ai_video
 
 # JWT Configuration
@@ -76,14 +78,13 @@ STRIPE_ENDPOINT_SECRET=whsec_your_webhook_secret_here
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your_email@gmail.com
-SMTP_PASSWORD=your_app_password_here
+SMTP_PASS=your_app_password_here
 SMTP_FROM=noreply@itonai.ro
 
 # FAL.ai Configuration (for image & video generation)
 FAL_AI_API_KEY=your_fal_ai_key_here
 
-# Application Configuration
-APP_ENV=production
+# Debug (remove in production)
 APP_DEBUG=false
 LOG_LEVEL=error
 ```

@@ -157,7 +157,7 @@ function generate_jwt_token(int $user_id): string {
     ]);
 }
 
-function get_current_user(): ?array {
+function get_authenticated_user(): ?array {
     global $pdo;
     
     $payload = verify_jwt();
@@ -187,7 +187,8 @@ function create_password_reset(string $email): bool {
     
     $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
     $stmt->execute([$email]);
-    if (!$stmt->fetch()) {
+    $user = $stmt->fetch();
+    if (!$user) {
         return true; // Silent - don't reveal if email exists
     }
     
@@ -196,8 +197,8 @@ function create_password_reset(string $email): bool {
     
     $pdo->prepare('DELETE FROM password_resets WHERE email = ?')->execute([$email]);
     $pdo->prepare(
-        'INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, ?)'
-    )->execute([$email, $token, $expires]);
+        'INSERT INTO password_resets (user_id, email, token, expires_at) VALUES (?, ?, ?, ?)'
+    )->execute([$user['id'], $email, $token, $expires]);
     
     $link = rtrim(APP_URL, '/') . BASE_PATH . '/reset-password?token=' . $token;
     send_reset_email($email, $link);

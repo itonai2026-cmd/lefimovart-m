@@ -54,9 +54,11 @@ Copiază `dist/` pe server la `/wp/lefimovart/`
 ### Videos
 - `POST /api/videos/generate.php` - Generare video
 - `GET /api/videos/list.php` - Lista video-uri
+- `GET /api/videos/status.php?id=X` - Verificare status video (polling)
 
 ### Payments
-- `POST /api/payments/verify_stripe.php` - Verificare Stripe
+- `POST /api/payments/create_checkout.php` - Creare sesiune Stripe Checkout
+- `POST /api/payments/verify_stripe.php` - Verificare plata Stripe
 
 ## 📱 Funcționalități
 

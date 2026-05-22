@@ -19,7 +19,7 @@ if (!isset($MODELS_CONFIG[$model])) { json_response(['error' => 'Invalid model']
 
 $config = $MODELS_CONFIG[$model];
 $cost = $config['base_credit_cost'];
-$user = get_current_user();
+$user = get_authenticated_user();
 
 if (!$user || $user['credits'] < $cost) { json_response(['error' => 'Insufficient credits'], 400); }
 
