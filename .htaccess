@@ -8,10 +8,10 @@
     # Protect .env
     RewriteRule \.env$ - [F,L]
 
-    # SPA routing - everything else goes to index.html
+    # SPA routing - everything else goes to frontend/dist/index.html
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^ index.html [QSA,L]
+    RewriteRule ^ frontend/dist/index.html [QSA,L]
 </IfModule>
 
 # Compression
