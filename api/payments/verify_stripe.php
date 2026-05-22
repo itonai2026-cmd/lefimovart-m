@@ -59,11 +59,29 @@ if (empty($email)) {
     json_response(['error' => 'No email found'], 400);
 }
 
+// Find user
+$user_stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
+$user_stmt->execute([$email]);
+$user_row = $user_stmt->fetch();
+if (!$user_row) {
+    json_response(['error' => 'User not found'], 400);
+}
+
 $credits = PLAN_CREDITS[$plan];
+$amount_usd = PLAN_PRICES_USD[$plan] / 100;
 
 // Save payment record
-$stmt = $pdo->prepare('INSERT INTO processed_payments (user_email, session_id, plan, credits_added) VALUES (?, ?, ?, ?)');
-$stmt->execute([$email, $session_id, $plan, $credits]);
+$stmt = $pdo->prepare('INSERT INTO processed_payments (user_id, user_email, session_id, plan, credits_added, amount_usd, stripe_customer_id, stripe_payment_intent_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+$stmt->execute([
+    $user_row['id'],
+    $email,
+    $session_id,
+    $plan,
+    $credits,
+    $amount_usd,
+    $session['customer'] ?? null,
+    $session['payment_intent'] ?? null
+]);
 
 // Add credits to user
 $stmt = $pdo->prepare('UPDATE users SET credits = credits + ? WHERE email = ?');

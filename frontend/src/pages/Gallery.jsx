@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { toast } from 'sonner';
 
 export default function Gallery() {
+  const navigate = useNavigate();
   const { logout } = useAuth();
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +51,10 @@ export default function Gallery() {
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Image Gallery</h1>
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate('/')} className="text-blue-600 font-bold hover:underline">&larr; Home</button>
+            <h1 className="text-3xl font-bold">Image Gallery</h1>
+          </div>
           <button onClick={logout} className="text-red-600 font-bold">Logout</button>
         </div>
 

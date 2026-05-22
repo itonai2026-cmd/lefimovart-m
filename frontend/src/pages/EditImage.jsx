@@ -1,8 +1,9 @@
 import React from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 
 export default function EditImage() {
+  const navigate = useNavigate();
   const { logout } = useAuth();
   const [params] = useSearchParams();
   const imageUrl = params.get('url');
@@ -11,7 +12,10 @@ export default function EditImage() {
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Edit Image</h1>
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate('/')} className="text-blue-600 font-bold hover:underline">&larr; Home</button>
+            <h1 className="text-3xl font-bold">Edit Image</h1>
+          </div>
           <button onClick={logout} className="text-red-600 font-bold">Logout</button>
         </div>
 

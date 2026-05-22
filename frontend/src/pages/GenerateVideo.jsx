@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/AuthContext';
 
 export default function GenerateVideo() {
+  const navigate = useNavigate();
   const { logout } = useAuth();
   const [prompt, setPrompt] = useState('');
   const [model, setModel] = useState('wan_fast');
@@ -39,7 +41,10 @@ export default function GenerateVideo() {
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-2xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Generate Video</h1>
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate('/')} className="text-blue-600 font-bold hover:underline">&larr; Home</button>
+            <h1 className="text-3xl font-bold">Generate Video</h1>
+          </div>
           <button onClick={logout} className="text-red-600 font-bold">Logout</button>
         </div>
 

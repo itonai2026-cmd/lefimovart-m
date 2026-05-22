@@ -17,7 +17,7 @@ if (empty($prompt)) { json_response(['error' => 'Prompt required'], 400); }
 // Cost calculation
 $cost_map = ['512' => 2, '1024' => 4];
 $cost = $cost_map[$resolution] ?? 4;
-$user = get_current_user();
+$user = get_authenticated_user();
 if (!$user || $user['credits'] < $cost) { json_response(['error' => 'Insufficient credits'], 400); }
 
 // Call FAL.AI
@@ -29,7 +29,7 @@ $fal_payload = [
     ][$resolution] ?? '1024x1024'
 ];
 
-$ch = curl_init(FAL_AI_BASE_URL . '/' . IMAGE_GEN_MODEL);
+$ch = curl_init('https://fal.run/' . IMAGE_GEN_MODEL);
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_POST => true,
@@ -38,7 +38,7 @@ curl_setopt_array($ch, [
         'Content-Type: application/json',
         'Authorization: Key ' . FAL_AI_API_KEY
     ],
-    CURLOPT_TIMEOUT => 30
+    CURLOPT_TIMEOUT => 120
 ]);
 $response = curl_exec($ch);
 curl_close($ch);
@@ -52,8 +52,8 @@ $image_url = $result['images'][0]['url'] ?? '';
 
 // Save to DB and deduct credits
 global $pdo;
-$stmt = $pdo->prepare('INSERT INTO generated_images (user_email, image_url, prompt) VALUES (?, ?, ?)');
-$stmt->execute([$user['email'], $image_url, $prompt]);
+$stmt = $pdo->prepare('INSERT INTO generated_images (user_id, user_email, image_url, prompt, resolution) VALUES (?, ?, ?, ?, ?)');
+$stmt->execute([$user['id'], $user['email'], $image_url, $prompt, $resolution]);
 $img_id = $pdo->lastInsertId();
 
 $upd = $pdo->prepare('UPDATE users SET credits = credits - ? WHERE id = ?');

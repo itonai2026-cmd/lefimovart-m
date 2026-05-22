@@ -1,15 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { toast } from 'sonner';
 
 export default function VideoGallery() {
+  const navigate = useNavigate();
   const { logout } = useAuth();
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const pollRef = useRef(null);
 
   useEffect(() => {
     fetchVideos();
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, []);
+
+  useEffect(() => {
+    const hasProcessing = videos.some(v => v.status === 'processing');
+    if (hasProcessing && !pollRef.current) {
+      pollRef.current = setInterval(() => pollProcessingVideos(), 10000);
+    } else if (!hasProcessing && pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }, [videos]);
 
   const fetchVideos = async () => {
     try {
@@ -25,11 +39,38 @@ export default function VideoGallery() {
     }
   };
 
+  const pollProcessingVideos = async () => {
+    const processing = videos.filter(v => v.status === 'processing');
+    for (const video of processing) {
+      try {
+        const res = await fetch(`/wp/lefimovart/api/videos/status.php?id=${video.id}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const data = await res.json();
+        if (data.ok && data.video.status !== 'processing') {
+          setVideos(prev => prev.map(v =>
+            v.id === video.id ? { ...v, ...data.video } : v
+          ));
+          if (data.video.status === 'completed') {
+            toast.success('Video ready!');
+          } else if (data.video.status === 'failed') {
+            toast.error(`Video failed: ${data.video.error_message || 'Unknown error'}`);
+          }
+        }
+      } catch (e) {
+        // Silent fail on poll
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">My Videos</h1>
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate('/')} className="text-blue-600 font-bold hover:underline">&larr; Home</button>
+            <h1 className="text-3xl font-bold">My Videos</h1>
+          </div>
           <button onClick={logout} className="text-red-600 font-bold">Logout</button>
         </div>
 
@@ -46,10 +87,15 @@ export default function VideoGallery() {
                 <div className="bg-gray-200 h-48 flex items-center justify-center">
                   {video.status === 'completed' && video.video_url ? (
                     <video controls className="w-full h-full object-cover" src={video.video_url}></video>
+                  ) : video.status === 'failed' ? (
+                    <div className="text-center p-4">
+                      <p className="text-red-600 font-bold text-sm">Failed</p>
+                      <p className="text-xs text-gray-500 mt-1">{video.error_message || 'Generation failed'}</p>
+                    </div>
                   ) : (
                     <div className="text-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500 mx-auto mb-2"></div>
-                      <p className="text-sm text-gray-600">{video.status}</p>
+                      <p className="text-sm text-gray-600">Processing...</p>
                     </div>
                   )}
                 </div>

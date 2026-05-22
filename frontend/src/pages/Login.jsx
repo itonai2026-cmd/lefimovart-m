@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/AuthContext';
 
@@ -91,7 +91,7 @@ export default function Login() {
         </button>
 
         <p className="text-center mt-6 text-gray-600">
-          Don't have an account? <a href="/register" className="text-blue-600 font-bold hover:underline">Register</a>
+          Don't have an account? <Link to="/register" className="text-blue-600 font-bold hover:underline">Register</Link>
         </p>
       </div>
     </div>

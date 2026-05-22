@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 
 export default function Register() {
@@ -70,7 +70,7 @@ export default function Register() {
         </form>
 
         <p className="text-center mt-6 text-gray-600">
-          Already have an account? <a href="/login" className="text-blue-600 font-bold hover:underline">Sign In</a>
+          Already have an account? <Link to="/login" className="text-blue-600 font-bold hover:underline">Sign In</Link>
         </p>
       </div>
     </div>
