@@ -10,8 +10,12 @@
 
     # SPA routing - everything else goes to frontend/dist/index.html
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^ frontend/dist/index.html [QSA,L]
+</IfModule>
+
+# Default directory index for root path
+<IfModule mod_dir.c>
+    DirectoryIndex frontend/dist/index.html
 </IfModule>
 
 # Compression
