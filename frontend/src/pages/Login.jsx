@@ -90,7 +90,11 @@ export default function Login() {
           Sign in with Google
         </button>
 
-        <p className="text-center mt-6 text-muted-foreground">
+        <p className="text-center mt-4 text-muted-foreground text-sm">
+          <Link to="/forgot-password" className="text-primary hover:underline">Forgot Password?</Link>
+        </p>
+
+        <p className="text-center mt-4 text-muted-foreground">
           Don't have an account? <Link to="/register" className="text-primary font-bold hover:underline">Register</Link>
         </p>
       </div>
