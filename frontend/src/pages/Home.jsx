@@ -40,7 +40,7 @@ export default function Home() {
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground">LefimovArt</h1>
+          <h1 className="text-4xl font-bold text-foreground">LefiMovArt</h1>
           <div className="text-right">
             <p className="text-lg font-semibold text-foreground">{user?.email}</p>
             <p className="text-sm text-primary">{user?.credits} credits</p>

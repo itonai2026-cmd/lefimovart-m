@@ -1,4 +1,4 @@
-# LefimovArt - Deployment Guide (No SSH/Terminal Access Required)
+# LefiMovArt - Deployment Guide (No SSH/Terminal Access Required)
 
 ## Prerequisites
 - Node.js & npm installed on your local Windows machine
