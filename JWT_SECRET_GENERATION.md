@@ -1,4 +1,4 @@
-# LefimovArt - JWT_SECRET Generation Guide
+# LefiMovArt - JWT_SECRET Generation Guide
 
 ## Genereaza JWT_SECRET - Metode care Functioneaza pe Windows
 

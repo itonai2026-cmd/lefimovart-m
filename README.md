@@ -1,4 +1,4 @@
-# 🎨 LefimovArt - AI Image & Video Generation Platform
+# 🎨 LefiMovArt - AI Image & Video Generation Platform
 
 Aplicație full-stack pentru generare și editare de imagini + generare video cu AI, hosted pe serverul LiteSpeed cu bază de date MySQL.
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * LefimovArt - Global Configuration
+ * LefiMovArt - Global Configuration
  * Database, Session, Constants, CORS
  */
 
@@ -59,7 +59,7 @@ try {
 }
 
 // ─── App Constants ────────────────────────────────────────────────────────
-define('APP_NAME', 'LefimovArt');
+define('APP_NAME', 'LefiMovArt');
 define('APP_URL', getenv('APP_URL') ?: 'http://localhost');
 define('BASE_PATH', getenv('BASE_PATH') !== false ? rtrim(getenv('BASE_PATH'), '/') : '/wp/lefimovart');
 define('UPLOAD_DIR', __DIR__ . '/../uploads/');
@@ -113,7 +113,7 @@ define('SMTP_PORT', getenv('SMTP_PORT') ?: 587);
 define('SMTP_USER', getenv('SMTP_USER') ?: '');
 define('SMTP_PASS', getenv('SMTP_PASS') ?: '');
 define('SMTP_FROM', getenv('SMTP_FROM') ?: 'noreply@lefimovart.app');
-define('SMTP_FROM_NAME', 'LefimovArt');
+define('SMTP_FROM_NAME', 'LefiMovArt');
 
 // ─── Google OAuth ────────────────────────────────────────────────────────
 define('GOOGLE_CLIENT_ID', getenv('GOOGLE_CLIENT_ID') ?: '');

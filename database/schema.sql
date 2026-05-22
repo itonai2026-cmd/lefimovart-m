@@ -1,4 +1,4 @@
--- LefimovArt Complete Database Schema
+-- LefiMovArt Complete Database Schema
 -- Clean schema for fresh database installation
 -- Compatible with MySQL 5.7+ and MariaDB
 

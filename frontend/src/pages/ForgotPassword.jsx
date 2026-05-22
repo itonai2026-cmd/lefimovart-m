@@ -30,7 +30,7 @@ export default function ForgotPassword() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="bg-card rounded-2xl shadow-xl shadow-black/20 p-8 w-full max-w-md border border-border">
-        <h1 className="text-3xl font-bold text-center mb-2 text-foreground">LefimovArt</h1>
+        <h1 className="text-3xl font-bold text-center mb-2 text-foreground">LefiMovArt</h1>
         <p className="text-center text-muted-foreground mb-8">Reset Your Password</p>
 
         {sent ? (
