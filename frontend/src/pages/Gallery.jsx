@@ -71,12 +71,20 @@ export default function Gallery() {
                 <img src={img.image_url} alt={img.prompt} className="w-full h-48 object-cover" />
                 <div className="p-3">
                   <p className="text-xs text-muted-foreground line-clamp-2">{img.prompt}</p>
-                  <button
-                    onClick={() => handleDelete(img.id)}
-                    className="mt-2 text-red-400 text-xs hover:underline font-bold"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex items-center gap-3 mt-2">
+                    <button
+                      onClick={() => navigate(`/edit?url=${encodeURIComponent(img.image_url)}`)}
+                      className="text-violet-400 text-xs hover:underline font-bold"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(img.id)}
+                      className="text-red-400 text-xs hover:underline font-bold"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
