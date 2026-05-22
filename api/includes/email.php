@@ -37,8 +37,13 @@ function send_mail(string $to, string $subject, string $htmlBody): void {
             $mail->SMTPAuth = true;
             $mail->Username = SMTP_USER;
             $mail->Password = SMTP_PASS;
-            $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
-            $mail->Port = SMTP_PORT;
+            $port = (int) SMTP_PORT;
+            if ($port === 465) {
+                $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+            } else {
+                $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            }
+            $mail->Port = $port;
             $mail->CharSet = 'UTF-8';
             
             $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
