@@ -29,8 +29,8 @@ export default function Register() {
       const data = await res.json();
       if (!data.ok) throw new Error(data.error);
       
-      toast.success('Registration successful! Please check your email to verify.');
-      navigate('/login');
+      toast.success('Registration successful! Check your email for the verification code.');
+      navigate(`/verify?email=${encodeURIComponent(email)}`);
     } catch (e) {
       toast.error(e.message);
     } finally {
