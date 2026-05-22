@@ -8,6 +8,9 @@
     # Protect .env
     RewriteRule \.env$ - [F,L]
 
+    # Serve frontend assets from dist folder
+    RewriteRule ^assets/(.*)$ frontend/dist/assets/$1 [L]
+
     # SPA routing - everything else goes to frontend/dist/index.html
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ frontend/dist/index.html [QSA,L]
