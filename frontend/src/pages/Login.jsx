@@ -29,7 +29,7 @@ export default function Login() {
       
       setUser(me.user);
       toast.success('Login successful!');
-      navigate('/');
+      window.location.replace('/wp/lefimovart/');
     } catch (e) {
       toast.error(e.message);
     } finally {
