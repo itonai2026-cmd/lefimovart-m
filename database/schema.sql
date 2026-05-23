@@ -31,20 +31,27 @@ CREATE TABLE generated_images (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     user_email VARCHAR(255) NOT NULL,
-    image_url VARCHAR(512) NOT NULL,
+    image_url VARCHAR(512) NULL,
     prompt TEXT NOT NULL,
     resolution VARCHAR(20) NOT NULL DEFAULT '1024',
+    status VARCHAR(20) NOT NULL DEFAULT 'ready',
+    error_message TEXT NULL,
+    request_format VARCHAR(10) NULL,
+    render_quality VARCHAR(20) NULL,
+    credits_deducted INT NOT NULL DEFAULT 0,
     ip_address VARCHAR(45) NULL,
     flagged TINYINT(1) DEFAULT 0,
     flagged_reason TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP NULL DEFAULT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE CASCADE,
     INDEX idx_user_id (user_id),
     INDEX idx_user_email (user_email),
     INDEX idx_created (created_at),
-    INDEX idx_resolution (resolution)
+    INDEX idx_resolution (resolution),
+    INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================

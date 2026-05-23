@@ -90,24 +90,40 @@ function GenerateImageTab({ credits, setCredits }) {
         referenceImageUrl = uploaded.file_url;
       }
 
-      const requestData = new FormData();
-      requestData.append('prompt', fullPrompt);
-      requestData.append('format', settings.format);
-      requestData.append('render_quality', settings.renderQuality);
-      if (referenceImageUrl) requestData.append('reference_image_url', referenceImageUrl);
+      const saveData = new FormData();
+      saveData.append('prompt', fullPrompt);
+      saveData.append('format', settings.format);
+      saveData.append('render_quality', settings.renderQuality);
+      if (referenceImageUrl) saveData.append('reference_image_url', referenceImageUrl);
 
-      const res = await fetch('/wp/lefimovart/api/images/create.php', {
+      const saveResponse = await fetch('/wp/lefimovart/api/requests/create.php', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: requestData
+        body: saveData
       });
-      const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) {
-        throw new Error(`Image request failed on the server (HTTP ${res.status}).`);
+      const saveContentType = saveResponse.headers.get('content-type') || '';
+      if (!saveContentType.includes('application/json')) {
+        throw new Error(`Saving the image request failed on the server (HTTP ${saveResponse.status}).`);
       }
-      const data = await res.json();
+      const savedRequest = await saveResponse.json();
+      if (!savedRequest.ok) throw new Error(savedRequest.error || 'Image request could not be saved');
+
+      const generationData = new FormData();
+      generationData.append('request_id', String(savedRequest.request_id));
+      const generationResponse = await fetch('/wp/lefimovart/api/images/create.php', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: generationData
+      });
+      const generationContentType = generationResponse.headers.get('content-type') || '';
+      if (!generationContentType.includes('application/json')) {
+        throw new Error(`Image generation failed on the server (HTTP ${generationResponse.status}).`);
+      }
+      const data = await generationResponse.json();
       if (!data.ok) throw new Error(data.error || 'Image generation failed');
 
       toast.success('Image generated!');

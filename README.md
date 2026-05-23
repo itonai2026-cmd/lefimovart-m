@@ -60,7 +60,8 @@ Copiază directoarele `api/`, `database/` și `frontend/dist/`, plus `.htaccess`
 - `POST /api/auth/reset_password.php` - Schimbare parolă
 
 ### Images
-- `POST /api/images/create.php` - Generare imagine
+- `POST /api/requests/create.php` - Salvare cerere imagine cu status `pending`
+- `POST /api/images/create.php` - Generare imagine din `request_id` si finalizare `ready`/`failed`
 - `GET /api/images/gallery.php` - Lista imagini
 - `DELETE /api/images/gallery.php` - Ștergere imagine
 

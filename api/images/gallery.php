@@ -11,8 +11,8 @@ $user = get_authenticated_user();
 global $pdo;
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $stmt = $pdo->prepare('SELECT id, image_url, prompt, created_at FROM generated_images WHERE user_email = ? ORDER BY created_at DESC LIMIT 50');
-    $stmt->execute([$user['email']]);
+    $stmt = $pdo->prepare('SELECT id, image_url, prompt, created_at FROM generated_images WHERE user_email = ? AND status = ? AND image_url IS NOT NULL ORDER BY created_at DESC LIMIT 50');
+    $stmt->execute([$user['email'], 'ready']);
     $images = $stmt->fetchAll();
     json_response(['ok' => true, 'images' => $images]);
 }
