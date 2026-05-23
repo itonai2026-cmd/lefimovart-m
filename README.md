@@ -60,12 +60,12 @@ Copiază directoarele `api/`, `database/` și `frontend/dist/`, plus `.htaccess`
 - `POST /api/auth/reset_password.php` - Schimbare parolă
 
 ### Images
-- `POST /api/images/generate.php` - Generare imagine
+- `POST /api/images/create.php` - Generare imagine
 - `GET /api/images/gallery.php` - Lista imagini
 - `DELETE /api/images/gallery.php` - Ștergere imagine
 
 ### Videos
-- `POST /api/videos/generate.php` - Generare video
+- `POST /api/videos/create.php` - Generare video
 - `GET /api/videos/list.php` - Lista video-uri
 - `GET /api/videos/status.php?id=X` - Verificare status video (polling)
 

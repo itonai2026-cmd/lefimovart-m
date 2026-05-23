@@ -63,7 +63,7 @@ function GenerateVideoTab({ credits, setCredits }) {
 
     setLoading(true);
     try {
-      const res = await fetch('/wp/lefimovart/api/videos/generate.php', {
+      const res = await fetch('/wp/lefimovart/api/videos/create.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -71,6 +71,10 @@ function GenerateVideoTab({ credits, setCredits }) {
         },
         body: JSON.stringify({ prompt, model, duration: parseInt(duration) })
       });
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Video request failed on the server (HTTP ${res.status}).`);
+      }
       const data = await res.json();
       if (!data.ok) throw new Error(data.error);
 

@@ -90,7 +90,7 @@ function GenerateImageTab({ credits, setCredits }) {
         referenceImageUrl = uploaded.file_url;
       }
 
-      const res = await fetch('/wp/lefimovart/api/images/generate.php', {
+      const res = await fetch('/wp/lefimovart/api/images/create.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -103,6 +103,10 @@ function GenerateImageTab({ credits, setCredits }) {
           reference_image_url: referenceImageUrl,
         })
       });
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Image request failed on the server (HTTP ${res.status}).`);
+      }
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Image generation failed');
 
