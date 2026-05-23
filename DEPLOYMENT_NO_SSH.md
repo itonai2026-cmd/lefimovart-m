@@ -15,35 +15,20 @@ git clone https://github.com/itonai2026-cmd/lefimovart.git /path/to/wp/lefimovar
 mysql -u r133813iton_dacos -p r133813iton_ai_video < database/schema.sql
 ```
 
-## Step 3: Build Frontend Locally (⏳ DO THIS ON YOUR WINDOWS MACHINE)
+## Step 3: Built Frontend Included in Git
 
-### On Your Local Windows Machine:
-```bash
-cd D:\lefimovart-dev\frontend
-npm install
-npm run build
-```
+The repository includes the compiled `frontend/dist/` output. When a change updates the React frontend, the corresponding generated `frontend/dist/index.html` and hashed files from `frontend/dist/assets/` must be committed and deployed together.
 
-This will create a `dist/` folder with all compiled frontend files.
+## Step 4: Deploy Repository Files Through Your Hosting Panel/Git Deploy
 
-## Step 4: Upload Built Frontend to Server (via FTP)
+Deploy the current Git revision into `/wp/lefimovart/`. The following files are part of the deploy and must not be skipped by the hosting Git integration:
+- `.htaccess`
+- `api/`
+- `frontend/dist/index.html`
+- `frontend/dist/assets/`
+- source files under `frontend/src/` (kept for future builds)
 
-### Files to Upload:
-1. **Frontend built files**: `frontend/dist/*` → `/wp/lefimovart/frontend/dist/`
-2. **API files**: All `.php` files are already on server from step 1
-3. **.env file**: Configure on server (see below)
-
-### Using FileZilla (or similar FTP client):
-1. Connect to your server via FTP/SFTP
-2. Navigate to `/home/user/public_html/wp/lefimovart/frontend/`
-3. Delete the old `dist` folder (if exists)
-4. Upload the new `dist` folder from `D:\lefimovart-dev\frontend\dist\`
-
-### Using SCP/SFTP Command (if available):
-```bash
-# From your local machine
-scp -r D:\lefimovart-dev\frontend\dist username@itonai.ro:/home/user/public_html/wp/lefimovart/frontend/
-```
+If `frontend/dist/index.html` is deployed without its matching hashed `frontend/dist/assets/*` files, the browser receives no JavaScript and the application appears as a blank page.
 
 ## Step 5: Configure .env on Server (via FTP or File Manager)
 
@@ -67,7 +52,7 @@ JWT_SECRET=your_super_secret_jwt_key_here_change_this
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID=406355544313-kjodsgu73vu5e4pkuavr1mss62g80c9k.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your_google_client_secret_here
-GOOGLE_CALLBACK_URL=http://itonai.ro/wp/lefimovart/api/auth/google_callback.php
+GOOGLE_CALLBACK_URL=https://itonai.ro/wp/lefimovart/api/auth/google_callback.php
 
 # Stripe Configuration
 STRIPE_SECRET_KEY=sk_test_your_test_key_here
@@ -83,6 +68,10 @@ SMTP_FROM=noreply@itonai.ro
 
 # FAL.ai Configuration (for image & video generation)
 FAL_AI_API_KEY=your_fal_ai_key_here
+
+# OpenAI Configuration (for image generation and AI image editing)
+OPENAI_API_KEY=sk-proj-your_openai_project_key_here
+OPENAI_IMAGE_MODEL=gpt-image-1.5
 
 # Debug (remove in production)
 APP_DEBUG=false
@@ -107,32 +96,31 @@ Or use cPanel File Manager to:
 
 ### Test API:
 ```
-http://itonai.ro/wp/lefimovart/api/auth/me.php
+https://itonai.ro/wp/lefimovart/api/auth/me.php
 ```
 Should return an error about missing token (which is expected).
 
 ### Test Frontend:
 ```
-http://itonai.ro/wp/lefimovart/
+https://itonai.ro/wp/lefimovart/
 ```
 Should show the login page.
 
 ## Troubleshooting
 
 ### "dist folder not found" error
-- Make sure you ran `npm install && npm run build` on your local machine
-- Verify the `dist` folder was created in `frontend/dist/`
-- Re-upload the dist folder via FTP
+- Confirm that the hosting Git deploy includes `frontend/dist/`, which is committed in this repository
+- Confirm that `frontend/dist/index.html` references asset names that exist under `frontend/dist/assets/`
 
 ### API returns 500 error
 - Check `.env` configuration is correct
 - Verify database credentials
-- Check FAL.ai API key is valid
+- Check `OPENAI_API_KEY` for image endpoints and `FAL_AI_API_KEY` for video endpoints
 - Review PHP error logs in hosting control panel
 
 ### Google OAuth not working
 - Verify Google Client ID and Secret in .env
-- Check redirect URI matches exactly: `http://itonai.ro/wp/lefimovart/api/auth/google_callback.php`
+- Check redirect URI matches exactly: `https://itonai.ro/wp/lefimovart/api/auth/google_callback.php`
 
 ### Stripe not processing payments
 - Verify Stripe keys in .env
@@ -164,15 +152,12 @@ Should show the login page.
 ## Summary
 
 **Local Machine (Windows):**
-- Clone repo ✓
-- Build frontend (`npm run build`)
-- Upload dist folder via FTP
+- Build frontend changes before committing (`npm run build`) ✓
+- Commit `frontend/dist/` together with code changes ✓
 
 **Server (Linux):**
-- Run database schema ✓
-- Upload dist folder from local machine
-- Create/upload .env configuration
-- Set file permissions (ask hosting support)
+- Deploy the Git revision from the hosting control panel
+- Edit `.env` through File Manager/hosting variables to add API credentials
 - Verify installation
 
 The application is now ready to use!

@@ -8,8 +8,10 @@
     # Protect .env
     RewriteRule \.env$ - [F,L]
 
-    # Serve frontend assets from dist folder
+    # Serve frontend assets from dist; do not turn missing JS into SPA HTML.
+    RewriteCond %{DOCUMENT_ROOT}/wp/lefimovart/frontend/dist/assets/$1 -f
     RewriteRule ^assets/(.*)$ frontend/dist/assets/$1 [L]
+    RewriteRule ^assets/ - [R=404,L]
 
     # SPA routing - everything else goes to frontend/dist/index.html
     RewriteCond %{REQUEST_FILENAME} !-f

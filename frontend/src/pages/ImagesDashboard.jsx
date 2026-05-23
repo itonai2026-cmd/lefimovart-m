@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Wand2, ImageIcon, Edit2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
+import PromptInput from '../components/PromptInput';
+import ImageSettings, { getCost } from '../components/ImageSettings';
+import StyleSelector from '../components/StyleSelector';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/AuthContext';
 
-// Import the existing pages
-import Home from './Home';
 import GalleryPage from './Gallery';
 
 export default function ImagesDashboard() {
@@ -46,96 +48,108 @@ export default function ImagesDashboard() {
 }
 
 function GenerateImageTab({ credits, setCredits }) {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [prompt, setPrompt] = useState('');
-  const [resolution, setResolution] = useState('1024');
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [referenceImage, setReferenceImage] = useState(null);
+  const [styleFilters, setStyleFilters] = useState({ artistic: '', lighting: '', technical: '' });
+  const [settings, setSettings] = useState({ resolution: '1024' });
 
-  const RESOLUTION_COSTS = { '512': 2, '1024': 4 };
-  const cost = RESOLUTION_COSTS[resolution] || 0;
+  const handleGenerate = async () => {
+    if (!prompt.trim()) return;
 
-  const handleGenerate = async (e) => {
-    e.preventDefault();
-    if (!prompt.trim()) {
-      toast.error('Please enter a prompt');
-      return;
-    }
-
+    const cost = getCost(settings.resolution);
     if (credits < cost) {
-      toast.error('Not enough credits');
+      toast.error('Not enough credits.');
       navigate('/buy-credits');
       return;
     }
 
-    setLoading(true);
+    const styleParts = [
+      styleFilters.artistic && `style ${styleFilters.artistic}`,
+      styleFilters.technical && `quality and technique ${styleFilters.technical}`,
+      styleFilters.lighting && `light and atmosphere ${styleFilters.lighting}`,
+    ].filter(Boolean);
+    const fullPrompt = styleParts.length
+      ? `${prompt}. Use the following: ${styleParts.join(', ')}.`
+      : prompt;
+
+    setIsLoading(true);
     try {
+      let referenceImageUrl = '';
+      if (referenceImage) {
+        const uploadData = new FormData();
+        uploadData.append('file', referenceImage);
+        const uploadResponse = await fetch('/wp/lefimovart/api/images/upload.php', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+          body: uploadData,
+        });
+        const uploaded = await uploadResponse.json();
+        if (!uploaded.ok) throw new Error(uploaded.error || 'Image upload failed');
+        referenceImageUrl = uploaded.file_url;
+      }
+
       const res = await fetch('/wp/lefimovart/api/images/generate.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ prompt, resolution })
+        body: JSON.stringify({
+          prompt: fullPrompt,
+          resolution: settings.resolution,
+          reference_image_url: referenceImageUrl,
+        })
       });
       const data = await res.json();
-      if (!data.ok) throw new Error(data.error);
+      if (!data.ok) throw new Error(data.error || 'Image generation failed');
 
       toast.success('Image generated!');
-      setCredits(credits - cost);
-      setPrompt('');
+      setCredits(data.credits_remaining ?? credits - cost);
+      setStyleFilters({ artistic: '', lighting: '', technical: '' });
       navigate(`/edit?url=${encodeURIComponent(data.image.url)}`);
     } catch (e) {
-      toast.error(e.message);
+      toast.error(e.message || 'Image generation failed');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="relative z-10 px-4 py-6 max-w-2xl mx-auto">
-      <div className="bg-card rounded-2xl shadow-lg shadow-black/10 p-8 border border-border">
-        <h2 className="text-2xl font-bold mb-6 text-foreground">Generate Image with AI</h2>
+    <div className="min-h-full bg-background dark:bg-slate-950" role="region" aria-label="Image generation">
+      <div className="relative z-10 px-4 py-4 sm:py-10">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-6"
+        >
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-indigo-600 dark:text-white mb-2">
+            Generate Images
+          </h1>
+        </motion.div>
 
-        <form onSubmit={handleGenerate} className="space-y-4">
-          <div>
-            <label className="block text-sm font-semibold mb-2 text-foreground">Your Prompt</label>
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Describe the image you want to generate..."
-              className="w-full h-32 px-4 py-2 bg-muted border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            />
+        <PromptInput
+          prompt={prompt}
+          setPrompt={setPrompt}
+          onGenerate={handleGenerate}
+          isLoading={isLoading}
+        />
+        <ImageSettings
+          settings={settings}
+          setSettings={setSettings}
+          credits={credits}
+          onImageUpload={setReferenceImage}
+          referenceImage={referenceImage}
+        />
+        <StyleSelector styles={styleFilters} onStylesChange={setStyleFilters} />
+
+        {isLoading && (
+          <div className="flex flex-col items-center mt-8 gap-4">
+            <div className="w-16 h-16 rounded-full border-2 border-violet-200 border-t-violet-600 animate-spin" />
+            <p className="text-sm text-slate-400 animate-pulse">Creating your image...</p>
           </div>
-
-          <div>
-            <label className="block text-sm font-semibold mb-2 text-foreground">Resolution</label>
-            <select
-              value={resolution}
-              onChange={(e) => setResolution(e.target.value)}
-              className="w-full px-4 py-2 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="512">512x512 (2 credits)</option>
-              <option value="1024">1024x1024 (4 credits)</option>
-            </select>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading || !prompt.trim() || credits < cost}
-            className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
-          >
-            {loading ? 'Generating...' : `Generate Image (${cost} credits)`}
-          </button>
-        </form>
-
-        {credits < 2 && (
-          <button
-            onClick={() => window.location.href = '/wp/lefimovart/#/buy-credits'}
-            className="w-full mt-4 bg-green-600 text-white font-bold py-2 rounded-lg hover:bg-green-700"
-          >
-            Buy More Credits
-          </button>
         )}
       </div>
     </div>

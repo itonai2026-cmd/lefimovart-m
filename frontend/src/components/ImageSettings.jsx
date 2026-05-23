@@ -51,7 +51,7 @@ export default function ImageSettings({ settings, setSettings, credits, onImageU
     <div className="w-full max-w-2xl mx-auto mt-3 px-1">
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 px-5 py-4 flex flex-wrap gap-5 items-center justify-evenly">
         <div className="flex flex-col gap-1.5 items-center">
-          <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">IMG</span>
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">{referenceImage ? "DEL" : "IMG"}</span>
           <input
             ref={fileInputRef}
             type="file"
@@ -61,8 +61,13 @@ export default function ImageSettings({ settings, setSettings, credits, onImageU
           />
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="bg-indigo-200 dark:bg-slate-800 rounded-lg min-h-[44px] min-w-[44px] transition-all border-2 border-dashed border-slate-300 dark:border-slate-600 hover:bg-slate-200">
+            onClick={() => referenceImage ? onImageUpload?.(null) : fileInputRef.current?.click()}
+            aria-label={referenceImage ? "Remove reference image" : "Upload reference image"}
+            className={`rounded-lg min-h-[44px] min-w-[44px] transition-all border-2 overflow-hidden ${
+              referenceImage
+                ? "border-violet-500 dark:border-violet-400"
+                : "border-dashed border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200"
+            }`}>
             {referenceImageUrl ? (
               <img src={referenceImageUrl} alt="Reference" className="w-11 h-11 object-cover" />
             ) : (
@@ -72,21 +77,21 @@ export default function ImageSettings({ settings, setSettings, credits, onImageU
         </div>
 
         <div className="flex flex-col gap-1.5 items-center">
-          <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">Resolution</span>
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">Quality</span>
           <div className="flex gap-2">
             {["512", "1024"].map((r) => (
               <Chip
                 key={r}
                 active={resolution === r}
                 onClick={() => setSettings((s) => ({ ...s, resolution: r }))}>
-                {r}px
+                {r === "512" ? "Low" : "Medium"}
               </Chip>
             ))}
           </div>
         </div>
 
         <div className="flex flex-col gap-1.5 items-center">
-          <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">COST</span>
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">Use</span>
           <div className="flex items-center gap-1.5 bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-800 rounded-xl px-3 py-1.5">
             <span className="text-sm font-bold text-violet-700 dark:text-violet-300">{cost}</span>
             <span className="text-sm">🪙</span>

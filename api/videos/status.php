@@ -14,7 +14,7 @@ global $pdo;
 $id = intval($_GET['id'] ?? 0);
 if (!$id) { json_response(['error' => 'Video ID required'], 400); }
 
-$stmt = $pdo->prepare('SELECT id, status, video_url, queue_id, status_url, api_endpoint, error_message FROM videos WHERE id = ? AND user_email = ?');
+$stmt = $pdo->prepare('SELECT id, status, video_url, queue_id, status_url, response_url, api_endpoint, error_message FROM videos WHERE id = ? AND user_email = ?');
 $stmt->execute([$id, $user['email']]);
 $video = $stmt->fetch();
 
@@ -28,7 +28,13 @@ if (empty($video['queue_id'])) {
     json_response(['ok' => true, 'video' => $video]);
 }
 
-$status_url = 'https://queue.fal.run/fal-ai/requests/' . $video['queue_id'] . '/status';
+$status_url = $video['status_url'];
+if (empty($status_url) && !empty($video['api_endpoint'])) {
+    $status_url = rtrim($video['api_endpoint'], '/') . '/requests/' . $video['queue_id'] . '/status';
+}
+if (empty($status_url)) {
+    json_response(['ok' => true, 'video' => $video]);
+}
 
 $ch = curl_init($status_url);
 curl_setopt_array($ch, [
@@ -49,7 +55,13 @@ if ($http_code !== 200) {
 $fal_status = json_decode($response, true);
 
 if (isset($fal_status['status']) && $fal_status['status'] === 'COMPLETED') {
-    $result_url = 'https://queue.fal.run/fal-ai/requests/' . $video['queue_id'];
+    $result_url = $video['response_url'];
+    if (empty($result_url) && !empty($video['api_endpoint'])) {
+        $result_url = rtrim($video['api_endpoint'], '/') . '/requests/' . $video['queue_id'];
+    }
+    if (empty($result_url)) {
+        json_response(['ok' => true, 'video' => $video]);
+    }
     $ch2 = curl_init($result_url);
     curl_setopt_array($ch2, [
         CURLOPT_RETURNTRANSFER => true,

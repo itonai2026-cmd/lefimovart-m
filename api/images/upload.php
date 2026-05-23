@@ -17,6 +17,15 @@ $file = $_FILES['file'];
 if ($file['error'] !== UPLOAD_ERR_OK) {
   json_response(['error' => 'Upload error: ' . $file['error']], 400);
 }
+if ($file['size'] > 6 * 1024 * 1024) {
+  json_response(['error' => 'Image too large. Maximum 6MB.'], 400);
+}
+
+$mime = (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
+$extensions = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp'];
+if (!isset($extensions[$mime])) {
+  json_response(['error' => 'Only PNG, JPG and WebP images are allowed.'], 400);
+}
 
 // Ensure img directory exists
 $img_dir = __DIR__ . '/../../img';
@@ -24,7 +33,7 @@ if (!is_dir($img_dir)) {
   mkdir($img_dir, 0755, true);
 }
 
-$filename = uniqid('upload_') . '.' . pathinfo($file['name'], PATHINFO_EXTENSION);
+$filename = uniqid('upload_', true) . '.' . $extensions[$mime];
 $filepath = $img_dir . '/' . $filename;
 
 if (!move_uploaded_file($file['tmp_name'], $filepath)) {

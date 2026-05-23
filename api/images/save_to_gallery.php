@@ -18,15 +18,13 @@ if (empty($image_url)) {
 }
 
 $user = get_authenticated_user();
-$conn = get_db_connection();
+if (!$user) { json_response(['error' => 'Unauthorized'], 401); }
 
-$stmt = $conn->prepare("INSERT INTO generated_images (user_id, image_url, prompt, created_at) VALUES (?, ?, ?, NOW())");
-$stmt->bind_param('iss', $user['id'], $image_url, $prompt);
-
-if ($stmt->execute()) {
-  json_response(['ok' => true, 'id' => $stmt->insert_id]);
-} else {
-  json_response(['error' => 'Failed to save: ' . $conn->error], 500);
+try {
+  global $pdo;
+  $stmt = $pdo->prepare('INSERT INTO generated_images (user_id, user_email, image_url, prompt, resolution) VALUES (?, ?, ?, ?, ?)');
+  $stmt->execute([$user['id'], $user['email'], $image_url, $prompt, 'edited']);
+  json_response(['ok' => true, 'id' => $pdo->lastInsertId()]);
+} catch (Throwable $e) {
+  json_response(['error' => 'Failed to save image.'], 500);
 }
-
-$stmt->close();

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/openai_images.php';
 
 set_cors_headers();
 
@@ -24,52 +25,29 @@ if (!$user || $user['credits'] < $cost) {
   json_response(['error' => 'Insufficient credits'], 400);
 }
 
-// Deduct credits
-$conn = get_db_connection();
-$stmt = $conn->prepare("UPDATE users SET credits = credits - ? WHERE id = ?");
-$stmt->bind_param('ii', $cost, $user['id']);
-$stmt->execute();
-$stmt->close();
-
-// Call FAL.AI inpainting endpoint (simplified - you would use the actual inpaint model)
-// For now, we'll just return the same image URL as FAL.AI doesn't provide inpaint in basic tier
-// In production, integrate with FAL.AI's image inpainting model
-
-$img_dir = __DIR__ . '/../../img';
-if (!is_dir($img_dir)) {
-  mkdir($img_dir, 0755, true);
-}
-
-// Simulate: download image, apply edit, save locally
-$filename = uniqid('edited_') . '.png';
-$filepath = $img_dir . '/' . $filename;
-
 try {
-  $image_data = @file_get_contents($image_url);
-  if (!$image_data) {
-    // If download fails, return error but keep credits deducted
-    json_response(['ok' => false, 'error' => 'Could not download image'], 400);
+  $image_data = openai_edit_image(local_image_path($image_url), $prompt);
+  $edited_url = save_image_bytes($image_data, 'edited_');
+
+  global $pdo;
+  $pdo->beginTransaction();
+  $stmt = $pdo->prepare('UPDATE users SET credits = credits - ? WHERE id = ? AND credits >= ?');
+  $stmt->execute([$cost, $user['id'], $cost]);
+  if ($stmt->rowCount() !== 1) {
+    throw new RuntimeException('Insufficient credits');
   }
-  
-  file_put_contents($filepath, $image_data);
-  
-  $edited_url = '/wp/lefimovart/img/' . $filename;
-  
-  // Fetch updated credits
-  $stmt = $conn->prepare("SELECT credits FROM users WHERE id = ?");
-  $stmt->bind_param('i', $user['id']);
-  $stmt->execute();
-  $result = $stmt->get_result();
-  $updated = $result->fetch_assoc();
-  $credits_remaining = $updated['credits'] ?? 0;
-  $stmt->close();
-  
+  $stmt = $pdo->prepare('SELECT credits FROM users WHERE id = ?');
+  $stmt->execute([$user['id']]);
+  $credits_remaining = (int)$stmt->fetchColumn();
+  $pdo->commit();
+
   json_response([
     'ok' => true,
     'url' => $edited_url,
     'credits_remaining' => $credits_remaining
   ]);
   
-} catch (Exception $e) {
-  json_response(['error' => 'Edit failed: ' . $e->getMessage()], 500);
+} catch (Throwable $e) {
+  if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
+  json_response(['error' => 'Edit failed: ' . $e->getMessage()], 502);
 }

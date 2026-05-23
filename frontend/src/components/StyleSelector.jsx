@@ -6,6 +6,8 @@ const ARTISTIC_STYLES = [
   { label: "Oil Painting", suffix: "oil painting, thick textures" },
   { label: "Watercolor", suffix: "watercolor, transparent colors" },
   { label: "Anime / Manga", suffix: "Japanese animation style" },
+  { label: "Comic Book", suffix: "comic book style" },
+  { label: "Pixel Art", suffix: "retro pixelated graphics" },
 ];
 
 const LIGHTING_STYLES = [
@@ -16,6 +18,7 @@ const LIGHTING_STYLES = [
 
 const TECHNICAL_STYLES = [
   { label: "3D Render", suffix: "photorealistic 3D rendering" },
+  { label: "Isometric", suffix: "isometric perspective" },
   { label: "Minimalist", suffix: "simple, few elements" },
   { label: "Vintage / Retro", suffix: "aged look, sepia" },
 ];
@@ -26,18 +29,24 @@ function StyleDropdown({ title, options, value, onChange }) {
       <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
         {title}
       </p>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full appearance-none text-sm font-medium rounded-xl px-3 py-2.5 pr-8 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all cursor-pointer bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
-        <option value="">None</option>
-        {options.map((opt) => (
-          <option key={opt.label} value={opt.suffix}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-slate-400" />
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={`w-full appearance-none text-sm font-medium rounded-xl px-3 py-2.5 pr-8 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all cursor-pointer ${
+            value
+              ? "bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-300 dark:border-violet-600"
+              : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700"
+          }`}>
+          <option value="">None</option>
+          {options.map((opt) => (
+            <option key={opt.label} value={opt.suffix}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-slate-400" />
+      </div>
     </div>
   );
 }
@@ -51,19 +60,19 @@ export default function StyleSelector({ styles, onStylesChange }) {
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <StyleDropdown
-            title="Artistic"
+            title="Artistic Styles"
             options={ARTISTIC_STYLES}
             value={styles.artistic}
             onChange={(v) => onStylesChange({ ...styles, artistic: v })}
           />
           <StyleDropdown
-            title="Lighting"
+            title="Lighting / Atmosphere"
             options={LIGHTING_STYLES}
             value={styles.lighting}
             onChange={(v) => onStylesChange({ ...styles, lighting: v })}
           />
           <StyleDropdown
-            title="Technical"
+            title="Technical Styles"
             options={TECHNICAL_STYLES}
             value={styles.technical}
             onChange={(v) => onStylesChange({ ...styles, technical: v })}

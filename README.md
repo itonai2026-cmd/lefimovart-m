@@ -1,4 +1,4 @@
-# 🎨 LefiMovArt - AI Image & Video Generation Platform
+# LefiMovArt - AI Image & Video Generation Platform
 
 Aplicație full-stack pentru generare și editare de imagini + generare video cu AI, hosted pe serverul LiteSpeed cu bază de date MySQL.
 
@@ -7,7 +7,8 @@ Aplicație full-stack pentru generare și editare de imagini + generare video cu
 - **Frontend:** React SPA (Vite) + TailwindCSS + shadcn/ui
 - **Backend:** PHP REST API (LiteSpeed)
 - **Database:** MySQL/MariaDB (`r133813iton_ai_video`)
-- **AI:** FAL.ai (imagini și video-uri)
+- **AI imagini/editare:** OpenAI Images API
+- **AI video:** FAL.ai
 - **Autentificare:** JWT + Google OAuth
 - **Plăți:** Stripe
 
@@ -21,19 +22,30 @@ mysql -h localhost -u r133813iton_dacos -p r133813iton_ai_video < database/schem
 ### 2. Environment
 Editează `.env` și adaugă credențialele:
 - `DB_*` (deja completat)
+- `OPENAI_API_KEY` pentru generare și editare imagini
+- `OPENAI_IMAGE_MODEL=gpt-image-1.5` (modelul recomandat curent pentru imagini)
+- `FAL_AI_API_KEY` pentru generare video
 - `GOOGLE_CLIENT_ID` și `GOOGLE_CLIENT_SECRET`
 - `STRIPE_SECRET_KEY` (dacă vrei plăți)
 
-### 3. Deploy PHP API
-Copiază directorul `api/` pe server la `/wp/lefimovart/api/`
+Pentru OpenAI, creează un **Project API key** în dashboard-ul OpenAI, din `API keys`, apoi adaugă cheia numai în `.env` pe server:
 
-### 4. Frontend Build
+```env
+OPENAI_API_KEY=sk-proj-...
+OPENAI_IMAGE_MODEL=gpt-image-1.5
+```
+
+Cheia este utilizată numai de endpoint-urile PHP din `api/images/`; nu trebuie introdusă în variabile Vite sau în codul React.
+
+### 3. Frontend Build
 ```bash
 cd frontend
 npm install
 npm run build
 ```
-Copiază `dist/` pe server la `/wp/lefimovart/`
+
+### 4. Deploy
+Copiază directoarele `api/`, `database/` și `frontend/dist/`, plus `.htaccess`, păstrând structura proiectului sub `/wp/lefimovart/`. Fișierul `.htaccess` din acest repo servește build-ul din `frontend/dist/`; `index.html` și tot directorul `frontend/dist/assets/` trebuie publicate împreună la fiecare build.
 
 ## 🔌 API Endpoints
 
@@ -62,7 +74,7 @@ Copiază `dist/` pe server la `/wp/lefimovart/`
 
 ## 📱 Funcționalități
 
-✅ Generare imagini cu AI (fal.ai/flux/dev)
+✅ Generare și editare imagini cu OpenAI
 ✅ Editare imagini (crop, rotate, blur, text, stickere, filtru AI)
 ✅ Generare video cu AI (3 modele: Wan, LTX, Kling)
 ✅ Galerie imagini/video
@@ -76,7 +88,7 @@ Copiază `dist/` pe server la `/wp/lefimovart/`
 
 ### LiteSpeed Setup
 1. Copiază `api/` în `/home/user/public_html/wp/lefimovart/api/`
-2. Copiază `frontend/dist/` în `/home/user/public_html/wp/lefimovart/`
+2. Copiază `frontend/dist/` în `/home/user/public_html/wp/lefimovart/frontend/dist/`
 3. Copie `.htaccess` la rădăcina `/wp/lefimovart/.htaccess`
 4. Setează permisiuni: `chmod 755 api/` și `chmod 644 api/*.php`
 
@@ -89,10 +101,14 @@ Copiază `dist/` pe server la `/wp/lefimovart/`
     # API routes pass through
     RewriteRule ^api/ - [L]
 
-    # SPA routing - redirecționează toate requesturi la index.html
+    # Asset-urile Vite sunt servite din build; cele lipsă rămân 404.
+    RewriteCond %{DOCUMENT_ROOT}/wp/lefimovart/frontend/dist/assets/$1 -f
+    RewriteRule ^assets/(.*)$ frontend/dist/assets/$1 [L]
+    RewriteRule ^assets/ - [R=404,L]
+
+    # SPA routing
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^ index.html [QSA,L]
+    RewriteRule ^ frontend/dist/index.html [QSA,L]
 </IfModule>
 ```
 
@@ -109,6 +125,8 @@ DB_USER=r133813iton_dacos
 DB_PASS=***
 
 FAL_AI_API_KEY=***
+OPENAI_API_KEY=sk-proj-***
+OPENAI_IMAGE_MODEL=gpt-image-1.5
 GOOGLE_CLIENT_ID=***
 GOOGLE_CLIENT_SECRET=***
 STRIPE_SECRET_KEY=sk_live_***

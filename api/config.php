@@ -68,10 +68,10 @@ define('JWT_SECRET', getenv('JWT_SECRET') ?: 'unsafe_default_key_change_me');
 define('JWT_EXPIRE', 86400 * 7); // 7 days
 
 // ─── AI APIs ──────────────────────────────────────────────────────────────
+define('OPENAI_API_KEY', getenv('OPENAI_API_KEY') ?: '');
+define('OPENAI_IMAGE_MODEL', getenv('OPENAI_IMAGE_MODEL') ?: 'gpt-image-1.5');
 define('FAL_AI_API_KEY', getenv('FAL_AI_API_KEY') ?: '');
 define('FAL_AI_BASE_URL', 'https://queue.fal.run');
-define('IMAGE_GEN_MODEL', getenv('IMAGE_GEN_MODEL') ?: 'fal-ai/flux/dev');
-define('IMAGE_EDIT_MODEL', getenv('IMAGE_EDIT_MODEL') ?: 'fal-ai/flux/dev');
 
 // ─── Video Models ─────────────────────────────────────────────────────────
 $MODELS_CONFIG = [
