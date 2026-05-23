@@ -1,114 +1,76 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import { useAuth } from '../lib/AuthContext';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const [prompt, setPrompt] = useState('');
-  const [resolution, setResolution] = useState('1024');
-  const [loading, setLoading] = useState(false);
-
-  const handleGenerate = async (e) => {
-    e.preventDefault();
-    if (!prompt.trim()) return;
-
-    setLoading(true);
-    try {
-      const res = await fetch('/wp/lefimovart/api/images/generate.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ prompt, resolution })
-      });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error);
-      
-      toast.success('Image generated!');
-      navigate(`/edit?url=${encodeURIComponent(data.image.url)}`);
-    } catch (e) {
-      toast.error(e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground">LefiMovArt</h1>
-          <div className="text-right">
-            <p className="text-lg font-semibold text-foreground">{user?.email}</p>
-            <p className="text-sm text-primary">{user?.credits} credits</p>
-            <button onClick={logout} className="text-red-400 text-sm hover:underline mt-1">Logout</button>
-          </div>
+    <div className="min-h-screen bg-background dark:bg-slate-950 flex flex-col items-center justify-center p-6">
+      {/* Blur background decorations */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-violet-100/40 dark:bg-violet-900/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-100/40 dark:bg-indigo-900/10 rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative z-10 text-center max-w-md mx-auto space-y-12">
+        {/* Header */}
+        <div className="space-y-4">
+          <h1 className="text-4xl sm:text-5xl font-bold text-indigo-600 dark:text-violet-400 tracking-widest">
+            LefiMovArt
+          </h1>
+          <p className="text-lg text-slate-600 dark:text-slate-400">
+            Welcome, {user?.email}!
+          </p>
+          <p className="text-sm text-slate-500 dark:text-slate-500">
+            Create stunning AI images and videos with a few clicks.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <button onClick={() => navigate('/gallery')} className="bg-card rounded-lg p-6 shadow-md shadow-black/10 hover:shadow-lg border border-border transition text-left">
-            <span className="text-3xl">🖼️</span>
-            <h3 className="font-bold mt-2 text-foreground">Image Gallery</h3>
-            <p className="text-sm text-muted-foreground">View your generated images</p>
+        {/* Main buttons */}
+        <div className="space-y-4">
+          {/* AI Image Generation & Modification */}
+          <button
+            onClick={() => navigate('/ai-images')}
+            className="w-full group relative overflow-hidden rounded-2xl p-8 text-white font-bold text-lg transition-all duration-300 hover:shadow-2xl hover:scale-105 active:scale-95"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-indigo-600 group-hover:from-violet-700 group-hover:to-indigo-700 transition-all" />
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-white/10 transition-opacity" />
+            <div className="relative flex flex-col items-center gap-3">
+              <span className="text-4xl">🎨</span>
+              <div>
+                <p className="font-bold">AI Image Generation</p>
+                <p className="text-sm font-normal text-violet-100">Generate & Modify Images</p>
+              </div>
+            </div>
           </button>
-          <button onClick={() => navigate('/generate-video')} className="bg-card rounded-lg p-6 shadow-md shadow-black/10 hover:shadow-lg border border-border transition text-left">
-            <span className="text-3xl">🎬</span>
-            <h3 className="font-bold mt-2 text-foreground">Generate Video</h3>
-            <p className="text-sm text-muted-foreground">Create AI videos</p>
-          </button>
-          <button onClick={() => navigate('/videos')} className="bg-card rounded-lg p-6 shadow-md shadow-black/10 hover:shadow-lg border border-border transition text-left">
-            <span className="text-3xl">📹</span>
-            <h3 className="font-bold mt-2 text-foreground">Video Gallery</h3>
-            <p className="text-sm text-muted-foreground">View your videos</p>
+
+          {/* AI Video Generation */}
+          <button
+            onClick={() => navigate('/ai-videos')}
+            className="w-full group relative overflow-hidden rounded-2xl p-8 text-white font-bold text-lg transition-all duration-300 hover:shadow-2xl hover:scale-105 active:scale-95"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 group-hover:from-indigo-700 group-hover:to-purple-700 transition-all" />
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-white/10 transition-opacity" />
+            <div className="relative flex flex-col items-center gap-3">
+              <span className="text-4xl">🎬</span>
+              <div>
+                <p className="font-bold">AI Video Generation</p>
+                <p className="text-sm font-normal text-purple-100">Create Amazing Videos</p>
+              </div>
+            </div>
           </button>
         </div>
 
-        <div className="bg-card rounded-2xl shadow-lg shadow-black/10 p-8 border border-border">
-          <h2 className="text-2xl font-bold mb-6 text-foreground">Generate Image with AI</h2>
-          
-          <form onSubmit={handleGenerate} className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-foreground">Your Prompt</label>
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Describe the image you want to generate..."
-                className="w-full h-32 px-4 py-2 bg-muted border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-foreground">Resolution</label>
-              <select
-                value={resolution}
-                onChange={(e) => setResolution(e.target.value)}
-                className="w-full px-4 py-2 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="512">512x512 (2 credits)</option>
-                <option value="1024">1024x1024 (4 credits)</option>
-              </select>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading || !prompt.trim() || user.credits < 2}
-              className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-lg hover:opacity-90 disabled:opacity-50"
-            >
-              {loading ? 'Generating...' : 'Generate Image'}
-            </button>
-          </form>
-
-          {user.credits < 2 && (
-            <button
-              onClick={() => navigate('/buy-credits')}
-              className="w-full mt-4 bg-green-600 text-white font-bold py-2 rounded-lg hover:bg-green-700"
-            >
-              Buy More Credits
-            </button>
-          )}
+        {/* Credits info */}
+        <div className="rounded-xl bg-white/10 dark:bg-slate-800/50 backdrop-blur-sm border border-white/20 dark:border-slate-700 p-4">
+          <p className="text-sm text-slate-700 dark:text-slate-300">
+            <span className="font-bold text-indigo-600 dark:text-violet-400">{user?.credits || 0} Credits</span> Available
+          </p>
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+            Each operation costs credits. Buy more if needed!
+          </p>
         </div>
       </div>
     </div>

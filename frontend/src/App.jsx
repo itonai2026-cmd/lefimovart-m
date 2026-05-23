@@ -7,6 +7,8 @@ import { AuthContext } from './lib/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
+import ImagesDashboard from './pages/ImagesDashboard';
+import VideosDashboard from './pages/VideosDashboard';
 import Gallery from './pages/Gallery';
 import GenerateVideo from './pages/GenerateVideo';
 import VideoGallery from './pages/VideoGallery';
@@ -67,6 +69,8 @@ function App() {
             ) : (
               <>
                 <Route path="/" element={<Home />} />
+                <Route path="/ai-images" element={<ImagesDashboard />} />
+                <Route path="/ai-videos" element={<VideosDashboard />} />
                 <Route path="/gallery" element={<Gallery />} />
                 <Route path="/edit" element={<EditImage />} />
                 <Route path="/generate-video" element={<GenerateVideo />} />
