@@ -12,21 +12,57 @@ $payload = require_auth();
 $input = json_decode(file_get_contents('php://input'), true);
 
 $prompt = $input['prompt'] ?? '';
-$resolution = $input['resolution'] ?? '1024';
+$format = $input['format'] ?? '1:1';
+$render_quality = $input['render_quality'] ?? 'standard';
 $reference_image_url = $input['reference_image_url'] ?? '';
 if (empty($prompt)) { json_response(['error' => 'Prompt required'], 400); }
 
-// Cost calculation
-$cost_map = ['512' => 2, '1024' => 4];
-$cost = $cost_map[$resolution] ?? 4;
+$image_options = [
+    '1:1' => [
+        'api_size' => '1024x1024',
+        'standard' => ['width' => 1024, 'height' => 1024, 'cost' => 4],
+        'hires' => ['width' => 2048, 'height' => 2048, 'cost' => 16],
+    ],
+    '3:2' => [
+        'api_size' => '1536x1024',
+        'standard' => ['width' => 1536, 'height' => 1024, 'cost' => 6],
+        'hires' => ['width' => 3072, 'height' => 2048, 'cost' => 24],
+    ],
+    '2:3' => [
+        'api_size' => '1024x1536',
+        'standard' => ['width' => 1024, 'height' => 1536, 'cost' => 6],
+        'hires' => ['width' => 2048, 'height' => 3072, 'cost' => 24],
+    ],
+    '16:9' => [
+        'api_size' => '1536x1024',
+        'standard' => ['width' => 1792, 'height' => 1008, 'cost' => 7],
+        'hires' => ['width' => 3584, 'height' => 2016, 'cost' => 28],
+    ],
+    '9:16' => [
+        'api_size' => '1024x1536',
+        'standard' => ['width' => 1008, 'height' => 1792, 'cost' => 7],
+        'hires' => ['width' => 2016, 'height' => 3584, 'cost' => 28],
+    ],
+];
+if (!isset($image_options[$format]) || !in_array($render_quality, ['standard', 'hires'], true)) {
+    json_response(['error' => 'Invalid image format or resolution'], 400);
+}
+
+$option = $image_options[$format];
+$output = $option[$render_quality];
+$cost = $output['cost'];
+$resolution = $output['width'] . 'x' . $output['height'];
 $user = get_authenticated_user();
 if (!$user || $user['credits'] < $cost) { json_response(['error' => 'Insufficient credits'], 400); }
 
 try {
-    $quality = $resolution === '512' ? 'low' : 'medium';
+    $quality = 'medium';
     $image_data = $reference_image_url !== ''
-        ? openai_edit_image(local_image_path($reference_image_url), $prompt)
-        : openai_generate_image($prompt, $quality);
+        ? openai_edit_image(local_image_path($reference_image_url), $prompt, $option['api_size'])
+        : openai_generate_image($prompt, $quality, $option['api_size']);
+    if ($resolution !== $option['api_size']) {
+        $image_data = render_image_dimensions($image_data, $output['width'], $output['height']);
+    }
     $image_url = save_image_bytes($image_data, 'img_');
 } catch (RuntimeException $e) {
     json_response(['error' => $e->getMessage()], 502);
@@ -55,7 +91,10 @@ json_response([
     'image' => [
         'id' => $img_id,
         'url' => $image_url,
-        'prompt' => $prompt
+        'prompt' => $prompt,
+        'format' => $format,
+        'resolution' => $resolution,
     ],
+    'credits_used' => $cost,
     'credits_remaining' => $user['credits'] - $cost
 ]);

@@ -26,11 +26,11 @@ function openai_extract_image_bytes(array $result): string {
     return $bytes;
 }
 
-function openai_generate_image(string $prompt, string $quality): string {
+function openai_generate_image(string $prompt, string $quality, string $size): string {
     $payload = [
         'model' => openai_image_model(),
         'prompt' => $prompt,
-        'size' => '1024x1024',
+        'size' => $size,
         'quality' => $quality,
     ];
 
@@ -57,7 +57,7 @@ function openai_generate_image(string $prompt, string $quality): string {
     return openai_extract_image_bytes($result);
 }
 
-function openai_edit_image(string $imagePath, string $prompt): string {
+function openai_edit_image(string $imagePath, string $prompt, string $size = '1024x1024'): string {
     if (!is_file($imagePath)) {
         throw new RuntimeException('Source image could not be found.');
     }
@@ -70,7 +70,7 @@ function openai_edit_image(string $imagePath, string $prompt): string {
             'model' => openai_image_model(),
             'image' => new CURLFile($imagePath),
             'prompt' => $prompt,
-            'size' => '1024x1024',
+            'size' => $size,
             'quality' => 'medium',
             'input_fidelity' => 'high',
         ],
@@ -89,6 +89,63 @@ function openai_edit_image(string $imagePath, string $prompt): string {
         throw new RuntimeException($result['error']['message'] ?? $curlError ?: 'OpenAI image edit request failed.');
     }
     return openai_extract_image_bytes($result);
+}
+
+function render_image_dimensions(string $bytes, int $targetWidth, int $targetHeight): string {
+    if (!function_exists('imagecreatefromstring')) {
+        throw new RuntimeException('HiRes and cinema formats require the PHP GD extension on the server.');
+    }
+
+    $source = imagecreatefromstring($bytes);
+    if ($source === false) {
+        throw new RuntimeException('Generated image could not be processed.');
+    }
+
+    $sourceWidth = imagesx($source);
+    $sourceHeight = imagesy($source);
+    $sourceRatio = $sourceWidth / $sourceHeight;
+    $targetRatio = $targetWidth / $targetHeight;
+
+    if ($sourceRatio > $targetRatio) {
+        $cropHeight = $sourceHeight;
+        $cropWidth = (int)round($sourceHeight * $targetRatio);
+        $cropX = (int)floor(($sourceWidth - $cropWidth) / 2);
+        $cropY = 0;
+    } else {
+        $cropWidth = $sourceWidth;
+        $cropHeight = (int)round($sourceWidth / $targetRatio);
+        $cropX = 0;
+        $cropY = (int)floor(($sourceHeight - $cropHeight) / 2);
+    }
+
+    $output = imagecreatetruecolor($targetWidth, $targetHeight);
+    imagealphablending($output, false);
+    imagesavealpha($output, true);
+    $transparent = imagecolorallocatealpha($output, 0, 0, 0, 127);
+    imagefilledrectangle($output, 0, 0, $targetWidth, $targetHeight, $transparent);
+    imagecopyresampled(
+        $output,
+        $source,
+        0,
+        0,
+        $cropX,
+        $cropY,
+        $targetWidth,
+        $targetHeight,
+        $cropWidth,
+        $cropHeight
+    );
+
+    ob_start();
+    imagepng($output);
+    $rendered = ob_get_clean();
+    imagedestroy($output);
+    imagedestroy($source);
+
+    if ($rendered === false) {
+        throw new RuntimeException('Failed to render final image.');
+    }
+    return $rendered;
 }
 
 function image_storage_dir(): string {

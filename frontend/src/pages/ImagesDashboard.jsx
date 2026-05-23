@@ -53,12 +53,12 @@ function GenerateImageTab({ credits, setCredits }) {
   const [isLoading, setIsLoading] = useState(false);
   const [referenceImage, setReferenceImage] = useState(null);
   const [styleFilters, setStyleFilters] = useState({ artistic: '', lighting: '', technical: '' });
-  const [settings, setSettings] = useState({ resolution: '1024' });
+  const [settings, setSettings] = useState({ format: '1:1', renderQuality: 'standard' });
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
 
-    const cost = getCost(settings.resolution);
+    const cost = getCost(settings.format, settings.renderQuality);
     if (credits < cost) {
       toast.error('Not enough credits.');
       navigate('/buy-credits');
@@ -98,7 +98,8 @@ function GenerateImageTab({ credits, setCredits }) {
         },
         body: JSON.stringify({
           prompt: fullPrompt,
-          resolution: settings.resolution,
+          format: settings.format,
+          render_quality: settings.renderQuality,
           reference_image_url: referenceImageUrl,
         })
       });

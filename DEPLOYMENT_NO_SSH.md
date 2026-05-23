@@ -4,6 +4,7 @@
 - Node.js & npm installed on your local Windows machine
 - FTP/SFTP client (FileZilla, WinSCP, etc.)
 - Text editor for .env configuration
+- PHP GD enabled on hosting for HiRes image output and exact 16:9 / 9:16 formats
 
 ## Step 1: Clone Repository (✅ COMPLETED)
 ```bash

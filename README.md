@@ -11,6 +11,7 @@ Aplicație full-stack pentru generare și editare de imagini + generare video cu
 - **AI video:** FAL.ai
 - **Autentificare:** JWT + Google OAuth
 - **Plăți:** Stripe
+- **Procesare imagine:** PHP GD pentru output HiRes și formatele 16:9 / 9:16
 
 ## 📦 Instalare
 
@@ -75,6 +76,7 @@ Copiază directoarele `api/`, `database/` și `frontend/dist/`, plus `.htaccess`
 ## 📱 Funcționalități
 
 ✅ Generare și editare imagini cu OpenAI
+✅ Formate imagine 1:1, 3:2, 2:3, 16:9 și 9:16, cu output Standard/HiRes
 ✅ Editare imagini (crop, rotate, blur, text, stickere, filtru AI)
 ✅ Generare video cu AI (3 modele: Wan, LTX, Kling)
 ✅ Galerie imagini/video
