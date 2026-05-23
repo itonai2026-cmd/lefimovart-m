@@ -110,10 +110,11 @@ export default function EditImage() {
 
   useEffect(() => {
     if (!initialUrl) return;
-    if (initialUrl.startsWith(window.location.origin)) return;
+    const sourceUrl = new URL(initialUrl, window.location.origin);
+    if (sourceUrl.origin === window.location.origin) return;
     let cancelled = false;
     setUploading(true);
-    fetch(initialUrl)
+    fetch(sourceUrl.toString())
       .then((r) => r.blob())
       .then(async (blob) => {
         const file = new File([blob], "edit-source.png", { type: blob.type || "image/png" });
