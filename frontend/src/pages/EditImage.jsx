@@ -33,6 +33,17 @@ const readStoredSaveFormat = () => {
   }
 };
 
+const isStoredAppImage = (url) => {
+  if (!url || typeof window === "undefined") return false;
+  try {
+    const resolved = new URL(url, window.location.origin);
+    return resolved.origin === window.location.origin &&
+      resolved.pathname.startsWith("/wp/lefimovart/img/");
+  } catch {
+    return false;
+  }
+};
+
 function getAuthHeaders() {
   const token = localStorage.getItem("token");
   return { Authorization: `Bearer ${token}` };
@@ -112,6 +123,7 @@ export default function EditImage() {
   const [saving, setSaving] = useState(false);
   const [saveFormat, setSaveFormat] = useState(readStoredSaveFormat);
   const [showSaveMenu, setShowSaveMenu] = useState(false);
+  const [savedToGallery, setSavedToGallery] = useState(() => isStoredAppImage(initialUrl));
 
   const runOptimisticCredits = useCallback(async (nextValue, asyncFn) => {
     setCredits(nextValue);
@@ -134,7 +146,10 @@ export default function EditImage() {
       .then(async (blob) => {
         const file = new File([blob], "edit-source.png", { type: blob.type || "image/png" });
         const fileUrl = await uploadFile(file);
-        if (!cancelled) setImageUrl(fileUrl);
+        if (!cancelled) {
+          setImageUrl(fileUrl);
+          setSavedToGallery(false);
+        }
       })
       .catch(() => { if (!cancelled) toast.error("Could not prepare image for editing."); })
       .finally(() => { if (!cancelled) setUploading(false); });
@@ -202,8 +217,8 @@ export default function EditImage() {
   const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
 
   const pushHistory = useCallback((state) => {
-    setHistory((h) => [...h.slice(-19), state]);
-  }, []);
+    setHistory((h) => [...h.slice(-19), { ...state, savedToGallery }]);
+  }, [savedToGallery]);
 
   const handleLoad = () => fileInputRef.current?.click();
 
@@ -214,6 +229,7 @@ export default function EditImage() {
     const localUrl = URL.createObjectURL(file);
     setImageFile(file);
     setImageUrl(localUrl);
+    setSavedToGallery(false);
     setRotation(0);
     setAdjust({ brightness: 100, contrast: 100, saturation: 100 });
     setBlur(0);
@@ -406,7 +422,7 @@ export default function EditImage() {
   });
 
   const handleSave = async (formatKey) => {
-    if (!imageUrl) { toast.error("No image to save."); return; }
+    if (!imageUrl || uploading) { toast.error("No image ready to save."); return; }
     const chosen = SAVE_EXPORT_FORMATS[formatKey] ? formatKey : saveFormat;
     const fmt = SAVE_EXPORT_FORMATS[chosen] || SAVE_EXPORT_FORMATS.png;
     setSaving(true);
@@ -417,7 +433,6 @@ export default function EditImage() {
 
       let finalBlob = sourceBlob;
       let ext = fmt.ext;
-      let fileMime = fmt.mime;
 
       if (fmt.mime !== sourceBlob.type) {
         const bmp = await createImageBitmap(sourceBlob);
@@ -428,7 +443,7 @@ export default function EditImage() {
         if (fmt.opaque) { ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height); }
         ctx.drawImage(bmp, 0, 0);
         finalBlob = await new Promise((r) => canvas.toBlob(r, fmt.mime, fmt.quality));
-        if (!finalBlob) { finalBlob = sourceBlob; ext = "png"; fileMime = "image/png"; }
+        if (!finalBlob) { finalBlob = sourceBlob; ext = "png"; }
       }
 
       const filename = `lefi-edited.${ext}`;
@@ -442,10 +457,16 @@ export default function EditImage() {
         setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
       }
 
-      const fileToUpload = new File([finalBlob], filename, { type: fileMime });
-      const fileUrl = await uploadFile(fileToUpload);
-      await saveToGallery(fileUrl, lastEditLabel);
-      toast.success(isMobile ? "Saved to Gallery!" : "Downloaded & saved to Gallery!");
+      const wasAlreadySaved = savedToGallery;
+      if (!wasAlreadySaved) {
+        await saveToGallery(imageUrl, lastEditLabel);
+        setSavedToGallery(true);
+      }
+      toast.success(
+        isMobile
+          ? (wasAlreadySaved ? "Already in Gallery." : "Saved to Gallery!")
+          : (wasAlreadySaved ? "Downloaded!" : "Downloaded & saved to Gallery!")
+      );
     } catch (err) {
       console.error(err);
       toast.error(err.message || "Save failed.");
@@ -473,6 +494,7 @@ export default function EditImage() {
           if (!result?.url) throw new Error("No image returned");
           setRealCredits(result.credits_remaining ?? newCredits);
           setImageUrl(result.url);
+          setSavedToGallery(false);
           setImageFile(null);
         });
         setLastEditLabel(`Edited: ${aiPrompt.trim()}`);
@@ -504,6 +526,7 @@ export default function EditImage() {
         const file = new File([blob], "cropped.png", { type: "image/png" });
         const fileUrl = await uploadFile(file);
         setImageUrl(fileUrl);
+        setSavedToGallery(false);
         setCropBox(null);
         setScale(1);
         setLastEditLabel(`Edited: Crop ${cropRatio}`);
@@ -522,6 +545,7 @@ export default function EditImage() {
         const file = new File([blob], "text-applied.png", { type: "image/png" });
         const fileUrl = await uploadFile(file);
         setImageUrl(fileUrl);
+        setSavedToGallery(false);
         setLastEditLabel(`Edited: Add text`);
         setOverlayText("");
         setOverlayZone({ x: 0.15, y: 0.6, w: 0.7, h: 0.25 });
@@ -545,6 +569,7 @@ export default function EditImage() {
         const file = new File([blob], "rotated.png", { type: "image/png" });
         const fileUrl = await uploadFile(file);
         setImageUrl(fileUrl);
+        setSavedToGallery(false);
         setLastEditLabel(`Edited: Rotate +${rotation}°`);
         setRotation(0);
         toast.success("Rotation applied!");
@@ -562,6 +587,7 @@ export default function EditImage() {
         const file = new File([blob], "stickers-applied.png", { type: "image/png" });
         const fileUrl = await uploadFile(file);
         setImageUrl(fileUrl);
+        setSavedToGallery(false);
         setLastEditLabel(`Edited: ${placedStickers.length} sticker(s)`);
         setPlacedStickers([]);
         setRotation(0);
@@ -584,6 +610,7 @@ export default function EditImage() {
         const file = new File([blob], "mirrored.png", { type: "image/png" });
         const fileUrl = await uploadFile(file);
         setImageUrl(fileUrl);
+        setSavedToGallery(false);
         const parts = [];
         if (mirrorH) parts.push("Horizontal");
         if (mirrorV) parts.push("Vertical");
@@ -607,6 +634,7 @@ export default function EditImage() {
         const file = new File([blob], "adjusted.png", { type: "image/png" });
         const fileUrl = await uploadFile(file);
         setImageUrl(fileUrl);
+        setSavedToGallery(false);
         const parts = [];
         if (hasAdjust) {
           const changed = [];
@@ -650,6 +678,7 @@ export default function EditImage() {
       const prev = history[history.length - 1];
       setHistory((h) => h.slice(0, -1));
       setImageUrl(prev.imageUrl);
+      setSavedToGallery(prev.savedToGallery ?? false);
       setRotation(prev.rotation);
       setAdjust(prev.adjust);
       setBlur(prev.blur);
@@ -688,6 +717,7 @@ export default function EditImage() {
     const prev = history[history.length - 1];
     setHistory((h) => h.slice(0, -1));
     setImageUrl(prev.imageUrl);
+    setSavedToGallery(prev.savedToGallery ?? false);
     setRotation(prev.rotation);
     setAdjust(prev.adjust);
     setBlur(prev.blur);
@@ -723,9 +753,9 @@ export default function EditImage() {
           </button>
           <div className="relative">
             <button
-              disabled={saving || !imageUrl}
+              disabled={saving || uploading || !imageUrl}
               onClick={() => setShowSaveMenu((v) => !v)}
-              className={`flex items-center gap-1 min-h-[44px] px-2 transition-colors ${saving || !imageUrl ? "text-slate-600 cursor-not-allowed" : "text-violet-400 hover:text-violet-300"}`}
+              className={`flex items-center gap-1 min-h-[44px] px-2 transition-colors ${saving || uploading || !imageUrl ? "text-slate-600 cursor-not-allowed" : "text-violet-400 hover:text-violet-300"}`}
               aria-label="Save image"
             >
               <Download className="w-4 h-4" />
