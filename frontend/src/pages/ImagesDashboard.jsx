@@ -112,7 +112,7 @@ function GenerateImageTab({ credits, setCredits }) {
 
       const generationData = new FormData();
       generationData.append('request_id', String(savedRequest.request_id));
-      const generationResponse = await fetch('/wp/lefimovart/api/images/create.php', {
+      const generationResponse = await fetch('/wp/lefimovart/api/requests/process.php', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

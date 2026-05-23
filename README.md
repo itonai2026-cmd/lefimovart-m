@@ -61,7 +61,7 @@ Copiază directoarele `api/`, `database/` și `frontend/dist/`, plus `.htaccess`
 
 ### Images
 - `POST /api/requests/create.php` - Salvare cerere imagine cu status `pending`
-- `POST /api/images/create.php` - Generare imagine din `request_id` si finalizare `ready`/`failed`
+- `POST /api/requests/process.php` - Generare imagine din `request_id` si finalizare `ready`/`failed`
 - `GET /api/images/gallery.php` - Lista imagini
 - `DELETE /api/images/gallery.php` - Ștergere imagine
 
