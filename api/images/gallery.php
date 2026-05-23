@@ -8,6 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
 $payload = require_auth();
 $user = get_authenticated_user();
+if (!$user) { json_response(['error' => 'Unauthorized'], 401); }
 global $pdo;
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {

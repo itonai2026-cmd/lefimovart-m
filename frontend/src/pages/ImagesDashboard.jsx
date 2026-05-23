@@ -80,7 +80,7 @@ function GenerateImageTab({ credits, setCredits }) {
       if (referenceImage) {
         const uploadData = new FormData();
         uploadData.append('file', referenceImage);
-        const uploadResponse = await fetch('/wp/lefimovart/api/images/upload.php', {
+        const uploadResponse = await fetch('/wp/lefimovart/api/requests/upload.php', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
           body: uploadData,

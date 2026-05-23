@@ -17,8 +17,8 @@ $file = $_FILES['file'];
 if ($file['error'] !== UPLOAD_ERR_OK) {
   json_response(['error' => 'Upload error: ' . $file['error']], 400);
 }
-if ($file['size'] > 6 * 1024 * 1024) {
-  json_response(['error' => 'Image too large. Maximum 6MB.'], 400);
+if ($file['size'] > MAX_UPLOAD_SIZE) {
+  json_response(['error' => 'Image too large. Maximum 50MB.'], 400);
 }
 
 $mime = (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);

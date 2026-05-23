@@ -28,13 +28,15 @@ export default function Gallery() {
   useEffect(() => {
     const loadGallery = async () => {
       try {
-        const res = await fetch('/wp/lefimovart/api/entities/generatedimagefilter.php', {
+        const res = await fetch('/wp/lefimovart/api/requests/gallery.php', {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
+        if (!res.ok) throw new Error(`Gallery request failed (${res.status})`);
         const data = await res.json();
-        setImages(data.data || []);
+        if (!data.ok) throw new Error(data.error || 'Gallery request failed');
+        setImages(data.images || []);
       } catch (e) {
-        toast.error('Failed to load gallery');
+        toast.error(e.message || 'Failed to load gallery');
       } finally {
         setLoading(false);
       }
@@ -52,8 +54,8 @@ export default function Gallery() {
     if (!deleteTarget?.id) return;
     setDeleting(true);
     try {
-      const res = await fetch('/wp/lefimovart/api/entities/generatedimagedelete.php', {
-        method: 'POST',
+      const res = await fetch('/wp/lefimovart/api/requests/gallery.php', {
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -64,9 +66,11 @@ export default function Gallery() {
       if (data.ok) {
         setImages((prev) => prev.filter((x) => x.id !== deleteTarget.id));
         toast.success("Image deleted.");
+      } else {
+        throw new Error(data.error || "Delete failed.");
       }
     } catch (e) {
-      toast.error("Delete failed.");
+      toast.error(e.message || "Delete failed.");
     } finally {
       setDeleting(false);
       setDeleteDialogOpen(false);

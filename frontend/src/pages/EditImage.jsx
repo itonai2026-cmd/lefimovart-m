@@ -41,11 +41,14 @@ function getAuthHeaders() {
 async function uploadFile(file) {
   const fd = new FormData();
   fd.append("file", file);
-  const res = await fetch(`${API_BASE}/images/upload.php`, {
+  const res = await fetch(`${API_BASE}/requests/upload.php`, {
     method: "POST",
     headers: getAuthHeaders(),
     body: fd,
   });
+  if (!res.headers.get("content-type")?.includes("application/json")) {
+    throw new Error(`Upload failed on the server (HTTP ${res.status}).`);
+  }
   const data = await res.json();
   if (!data.ok) throw new Error(data.error || "Upload failed");
   return data.file_url;
@@ -58,22 +61,34 @@ async function fetchCredits() {
 }
 
 async function aiEditImage(prompt, imageUrl) {
-  const res = await fetch(`${API_BASE}/images/ai_edit.php`, {
+  const fd = new FormData();
+  fd.append("prompt", prompt);
+  fd.append("image_url", imageUrl);
+  const res = await fetch(`${API_BASE}/requests/edit.php`, {
     method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt, image_url: imageUrl }),
+    headers: getAuthHeaders(),
+    body: fd,
   });
+  if (!res.headers.get("content-type")?.includes("application/json")) {
+    throw new Error(`AI edit failed on the server (HTTP ${res.status}).`);
+  }
   const data = await res.json();
   if (!data.ok) throw new Error(data.error || "AI edit failed");
   return data;
 }
 
 async function saveToGallery(imageUrl, prompt) {
-  const res = await fetch(`${API_BASE}/images/save_to_gallery.php`, {
+  const fd = new FormData();
+  fd.append("image_url", imageUrl);
+  fd.append("prompt", prompt);
+  const res = await fetch(`${API_BASE}/requests/save.php`, {
     method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ image_url: imageUrl, prompt }),
+    headers: getAuthHeaders(),
+    body: fd,
   });
+  if (!res.headers.get("content-type")?.includes("application/json")) {
+    throw new Error(`Save failed on the server (HTTP ${res.status}).`);
+  }
   const data = await res.json();
   if (!data.ok) throw new Error(data.error || "Save failed");
   return data;
@@ -433,7 +448,7 @@ export default function EditImage() {
       toast.success(isMobile ? "Saved to Gallery!" : "Downloaded & saved to Gallery!");
     } catch (err) {
       console.error(err);
-      toast.error("Save failed.");
+      toast.error(err.message || "Save failed.");
     } finally {
       setSaving(false);
     }
