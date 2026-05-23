@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { json_response(['error' => 'Method not allowed'], 405); }
 
 $payload = require_auth();
-$input = json_decode(file_get_contents('php://input'), true);
+$input = !empty($_POST) ? $_POST : (json_decode(file_get_contents('php://input'), true) ?: []);
 
 $prompt = $input['prompt'] ?? '';
 $model = $input['model'] ?? 'wan_fast';

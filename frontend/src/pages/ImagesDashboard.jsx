@@ -90,18 +90,18 @@ function GenerateImageTab({ credits, setCredits }) {
         referenceImageUrl = uploaded.file_url;
       }
 
+      const requestData = new FormData();
+      requestData.append('prompt', fullPrompt);
+      requestData.append('format', settings.format);
+      requestData.append('render_quality', settings.renderQuality);
+      if (referenceImageUrl) requestData.append('reference_image_url', referenceImageUrl);
+
       const res = await fetch('/wp/lefimovart/api/images/create.php', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({
-          prompt: fullPrompt,
-          format: settings.format,
-          render_quality: settings.renderQuality,
-          reference_image_url: referenceImageUrl,
-        })
+        body: requestData
       });
       const contentType = res.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {

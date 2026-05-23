@@ -63,13 +63,17 @@ function GenerateVideoTab({ credits, setCredits }) {
 
     setLoading(true);
     try {
+      const requestData = new FormData();
+      requestData.append('prompt', prompt);
+      requestData.append('model', model);
+      requestData.append('duration', String(parseInt(duration, 10)));
+
       const res = await fetch('/wp/lefimovart/api/videos/create.php', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ prompt, model, duration: parseInt(duration) })
+        body: requestData
       });
       const contentType = res.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {
