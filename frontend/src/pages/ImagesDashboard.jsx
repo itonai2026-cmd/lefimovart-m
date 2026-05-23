@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Wand2, Images, Edit2 } from 'lucide-react';
+import { Wand2, ImageIcon, Edit2 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/AuthContext';
 
 // Import the existing pages
 import Home from './Home';
-import Gallery from './Gallery';
+import GalleryPage from './Gallery';
 
 export default function ImagesDashboard() {
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ export default function ImagesDashboard() {
 
   const tabs = [
     { id: 'generate', label: 'Generate', icon: Wand2 },
-    { id: 'gallery', label: 'Gallery', icon: Images },
+    { id: 'gallery', label: 'Gallery', icon: ImageIcon },
     { id: 'edit', label: 'Edit', icon: Edit2 },
   ];
 
@@ -143,5 +143,5 @@ function GenerateImageTab({ credits, setCredits }) {
 }
 
 function GalleryTab() {
-  return <Gallery />;
+  return <GalleryPage />;
 }
