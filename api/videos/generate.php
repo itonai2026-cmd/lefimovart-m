@@ -49,7 +49,10 @@ if (!$result || !isset($result['request_id'])) {
     json_response(['error' => 'Video generation failed'], 500);
 }
 
-// Save to DB
+// Save to DB with status_url for polling
+$vid_dir = __DIR__ . '/../../vid';
+if (!is_dir($vid_dir)) mkdir($vid_dir, 0755, true);
+
 $stmt = $pdo->prepare('INSERT INTO videos (user_id, user_email, prompt, model_used, resolution, duration, format, video_url, credits_deducted, status, queue_id, status_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 $stmt->execute([
     $user['id'],

@@ -34,7 +34,7 @@ if (!isset($_FILES['file'])) {
 
 try {
     $file = $_FILES['file'];
-    $uploadDir = __DIR__ . '/../../images/';
+    $uploadDir = __DIR__ . '/../../ing/';
     
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0755, true);
@@ -49,7 +49,7 @@ try {
 
     echo json_encode([
         'ok' => true,
-        'file_url' => '/wp/lefimovart/images/' . $filename
+        'file_url' => '/wp/lefimovart/ing/' . $filename
     ]);
 } catch (Exception $e) {
     http_response_code(500);

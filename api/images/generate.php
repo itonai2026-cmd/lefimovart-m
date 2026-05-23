@@ -48,7 +48,21 @@ if (!$result || !isset($result['images'][0])) {
     json_response(['error' => 'AI generation failed'], 500);
 }
 
-$image_url = $result['images'][0]['url'] ?? '';
+$external_url = $result['images'][0]['url'] ?? '';
+
+// Download image and save locally
+$ing_dir = __DIR__ . '/../../ing';
+if (!is_dir($ing_dir)) mkdir($ing_dir, 0755, true);
+
+$filename = uniqid('img_') . '.png';
+$filepath = $ing_dir . '/' . $filename;
+$image_data = file_get_contents($external_url);
+if ($image_data === false) {
+    json_response(['error' => 'Failed to download image'], 500);
+}
+file_put_contents($filepath, $image_data);
+
+$image_url = '/wp/lefimovart/ing/' . $filename;
 
 // Save to DB and deduct credits
 global $pdo;
