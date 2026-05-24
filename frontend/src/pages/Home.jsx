@@ -113,7 +113,7 @@ export default function Home() {
         {/* Credits info */}
         <div className="rounded-xl bg-white/10 dark:bg-slate-800/50 backdrop-blur-sm border border-white/20 dark:border-slate-700 p-4">
           <p className="text-sm text-slate-700 dark:text-slate-300">
-            <span className="font-bold text-indigo-600 dark:text-violet-400">{user?.credits || 0} Credits</span> Available
+            <span className="font-bold text-indigo-600 dark:text-violet-400">{user?.credits || 0} 🪙</span> Available
           </p>
           <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
             Only AI operations consume credits

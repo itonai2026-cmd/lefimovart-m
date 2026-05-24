@@ -35,7 +35,7 @@ export default function BuyCredits() {
       });
       const data = await res.json();
       if (data.ok) {
-        toast.success(`Payment successful! ${data.credits} credits added.`);
+        toast.success(`Payment successful! ${data.credits} 🪙 added.`);
         const meRes = await fetch('/wp/lefimovart/api/auth/me.php', {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
@@ -79,7 +79,7 @@ export default function BuyCredits() {
         </div>
 
         <div className="bg-card rounded-lg p-6 mb-8 text-center border border-border">
-          <p className="text-lg text-muted-foreground">Current Balance: <span className="text-2xl font-bold text-primary">{user?.credits} credits</span></p>
+          <p className="text-lg text-muted-foreground">Current Balance: <span className="text-2xl font-bold text-primary">{user?.credits} 🪙</span></p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -87,7 +87,7 @@ export default function BuyCredits() {
             <div key={plan.id} className="bg-card rounded-lg shadow-lg shadow-black/10 p-6 text-center border border-border hover:shadow-xl transition">
               <h3 className="text-2xl font-bold mb-2 text-foreground">{plan.name}</h3>
               <p className="text-4xl font-bold text-primary mb-2">{plan.price}</p>
-              <p className="text-lg text-muted-foreground mb-6">{plan.credits} Credits</p>
+              <p className="text-lg text-muted-foreground mb-6">{plan.credits} 🪙</p>
               <button
                 onClick={() => handleBuyCredits(plan.id)}
                 disabled={loading}

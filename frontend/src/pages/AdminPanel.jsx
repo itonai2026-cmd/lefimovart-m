@@ -95,7 +95,7 @@ export default function AdminPanel() {
           </div>
           <div className="w-full bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-800 rounded-xl px-6 py-4 flex items-center justify-between">
             <span className="text-sm font-medium text-slate-600 dark:text-slate-300">My Credits</span>
-            <span className="text-2xl font-bold text-violet-700 dark:text-violet-300">{user.credits ?? 0}</span>
+            <span className="text-2xl font-bold text-violet-700 dark:text-violet-300">{user.credits ?? 0} 🪙</span>
           </div>
           <button
             onClick={() => updateCredits(user.id, MAX_CREDITS)}
@@ -103,7 +103,7 @@ export default function AdminPanel() {
             className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl min-h-[48px] font-medium shadow-lg shadow-violet-500/25 disabled:opacity-40 flex items-center justify-center"
           >
             {saving ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-            Reset my credits to {MAX_CREDITS}
+            Reset my balance to {MAX_CREDITS} 🪙
           </button>
         </motion.div>
 
@@ -131,7 +131,7 @@ export default function AdminPanel() {
                       <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{u.name || u.email}</p>
                       <p className="text-xs text-slate-400">{u.email}</p>
                     </span>
-                    <span className="text-sm font-bold text-violet-600 dark:text-violet-400">{u.credits ?? 0}</span>
+                    <span className="text-sm font-bold text-violet-600 dark:text-violet-400">{u.credits ?? 0} 🪙</span>
                   </button>
                 ))
               )}
@@ -142,7 +142,7 @@ export default function AdminPanel() {
             <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-800 rounded-xl px-4 py-3 flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{grantTarget.name || grantTarget.email}</p>
-                <p className="text-xs text-slate-400">{grantTarget.email} - {grantTarget.credits ?? 0} credits</p>
+                <p className="text-xs text-slate-400">{grantTarget.email} - {grantTarget.credits ?? 0} 🪙</p>
               </div>
               <button onClick={() => setGrantTarget(null)} className="text-xs text-slate-400 hover:text-red-400 ml-3">x</button>
             </div>
@@ -157,7 +157,7 @@ export default function AdminPanel() {
               onChange={(e) => setGrantAmount(e.target.value)}
               className="w-24 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-violet-400 text-center"
             />
-            <span className="text-sm text-slate-500">credits</span>
+            <span className="text-sm text-slate-500">🪙</span>
             <button
               onClick={() => updateCredits(grantTarget.id, (grantTarget.credits ?? 0) + (parseInt(grantAmount, 10) || 0))}
               disabled={!grantTarget || saving}

@@ -122,9 +122,9 @@ function GenerateVideoTab({ credits, setCredits }) {
               onChange={(e) => setModel(e.target.value)}
               className="w-full px-4 py-2 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <option value="wan_fast">Wan 2.1 Fast (5 credits)</option>
-              <option value="ltx_video">LTX Video (4 credits)</option>
-              <option value="kling_turbo">Kling 1.6 (8 credits)</option>
+              <option value="wan_fast">Wan 2.1 Fast (5 🪙)</option>
+              <option value="ltx_video">LTX Video (4 🪙)</option>
+              <option value="kling_turbo">Kling 1.6 (8 🪙)</option>
             </select>
           </div>
 
@@ -147,7 +147,7 @@ function GenerateVideoTab({ credits, setCredits }) {
             disabled={loading || !prompt.trim() || credits < cost}
             className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
           >
-            {loading ? 'Generating...' : `Generate Video (${cost} credits)`}
+            {loading ? 'Generating...' : `Generate Video (${cost} 🪙)`}
           </button>
         </form>
       </div>
