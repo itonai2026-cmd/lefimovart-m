@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Coins, FileText, Loader2, LogOut, Settings2, ShieldCheck, Trash2 } from "lucide-react";
+import { Coins, FileText, ImageIcon, Loader2, LogOut, Settings2, ShieldCheck, Trash2, Wand2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import AppLogo from "../components/AppLogo";
+import Layout from "../components/Layout";
 import { useAuth } from "../lib/AuthContext";
 
 export default function SettingsPage() {
@@ -11,6 +12,11 @@ export default function SettingsPage() {
   const { user, logout } = useAuth();
   const [deleting, setDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const tabs = [
+    { id: "generate", label: "Generate", icon: Wand2 },
+    { id: "gallery", label: "Gallery", icon: ImageIcon },
+    { id: "settings", label: "Settings", icon: Settings2 },
+  ];
 
   const handleDeleteAccount = async () => {
     if (deleting) return;
@@ -62,7 +68,16 @@ export default function SettingsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-background dark:bg-slate-950" role="region" aria-label="Settings page">
+    <Layout
+      tabs={tabs}
+      activeTab="settings"
+      onTabChange={(tabId) => {
+        if (tabId === "generate") navigate("/ai-images");
+        if (tabId === "gallery") navigate("/gallery");
+        if (tabId === "settings") navigate("/settings");
+      }}
+    >
+    <div className="min-h-full bg-background dark:bg-slate-950" role="region" aria-label="Settings page">
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-violet-100/40 dark:bg-violet-900/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-100/40 dark:bg-indigo-900/10 rounded-full blur-3xl" />
@@ -142,5 +157,6 @@ export default function SettingsPage() {
         )}
       </div>
     </div>
+    </Layout>
   );
 }

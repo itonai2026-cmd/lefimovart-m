@@ -61,7 +61,7 @@ export default function Layout({ children, tabs, activeTab, onTabChange, headerC
 
         <div className="flex items-center gap-3">
           <p className="text-sm font-semibold text-primary whitespace-nowrap">
-            {headerCredits ?? user?.credits ?? 0} credits
+            {headerCredits ?? user?.credits ?? 0} 🪙
           </p>
           <button
             onClick={() => setDark((d) => !d)}

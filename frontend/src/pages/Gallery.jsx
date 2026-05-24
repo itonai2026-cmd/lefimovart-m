@@ -13,6 +13,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
+import GalleryImageMenu from "@/components/GalleryImageMenu";
 
 const IMAGES_PER_PAGE = 10;
 
@@ -48,6 +49,10 @@ export default function Gallery() {
     e.stopPropagation();
     setDeleteTarget(img);
     setDeleteDialogOpen(true);
+  };
+
+  const handleFlagged = (imageId) => {
+    setImages((prev) => prev.filter((image) => image.id !== imageId));
   };
 
   const confirmDelete = async () => {
@@ -107,6 +112,9 @@ export default function Gallery() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.04 }}>
                   <div className="rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md active:scale-95 transition-all relative group">
+                    <div className="absolute z-10" style={{ top: "2px", left: "2px" }}>
+                      <GalleryImageMenu imageId={img.id} onFlagged={handleFlagged} />
+                    </div>
                     <button
                       type="button"
                       onClick={(e) => {
