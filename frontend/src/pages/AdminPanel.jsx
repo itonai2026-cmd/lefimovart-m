@@ -4,6 +4,7 @@ import { ChevronLeft, Plus, RefreshCw, Search, ShieldCheck } from "lucide-react"
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useAuth } from "../lib/AuthContext";
+import StickerManager from "../components/admin/StickerManager";
 
 const MAX_CREDITS = 40;
 
@@ -167,6 +168,15 @@ export default function AdminPanel() {
               Add Credits
             </button>
           </div>
+        </motion.div>
+
+        {/* Sticker Gallery Manager */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6"
+        >
+          <StickerManager />
         </motion.div>
       </div>
     </div>
