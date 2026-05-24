@@ -42,18 +42,18 @@ export default function ImageSettings({ settings, setSettings, credits, onImageU
     onImageUpload?.(file);
   };
 
-  const Chip = ({ active, onClick, children, ariaLabel }) => (
+  const QualityButton = ({ active, onClick, children, ariaLabel }) => (
     <button
       type="button"
       onClick={onClick}
       aria-label={ariaLabel}
       aria-pressed={active}
-      className={`px-3 min-h-[44px] rounded-lg text-sm font-medium transition-all ${
+      className={`min-h-[62px] rounded-xl border px-3 py-2 text-center transition-all ${
         active
-          ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md"
-          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+          ? "border-violet-500 bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300"
+          : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
       }`}>
-      {children}
+      <span className="block text-sm font-bold">{children}</span>
     </button>
   );
 
@@ -89,21 +89,21 @@ export default function ImageSettings({ settings, setSettings, credits, onImageU
 
           <div className="flex flex-col gap-1.5 items-center">
             <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">Resolution</span>
-            <div className="flex gap-2">
-              <Chip
+            <div className="grid grid-cols-2 gap-2">
+              <QualityButton
                 active={renderQuality === "standard"}
                 onClick={() => setSettings((s) => ({ ...s, renderQuality: "standard" }))}
                 ariaLabel="Standard resolution"
               >
                 Standard
-              </Chip>
-              <Chip
+              </QualityButton>
+              <QualityButton
                 active={renderQuality === "hires"}
                 onClick={() => setSettings((s) => ({ ...s, renderQuality: "hires" }))}
                 ariaLabel="High resolution"
               >
                 HiRes
-              </Chip>
+              </QualityButton>
             </div>
           </div>
 
@@ -120,7 +120,10 @@ export default function ImageSettings({ settings, setSettings, credits, onImageU
             {credits === null ? (
               <div className="h-8 w-20 rounded-xl bg-slate-200 dark:bg-slate-700 animate-pulse" />
             ) : (
-              <span className="text-sm font-bold text-violet-600 dark:text-violet-400">{credits}</span>
+              <div className="flex items-center gap-1.5 bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-800 rounded-xl px-3 py-1.5">
+                <span className="text-sm font-bold text-violet-700 dark:text-violet-300">{credits}</span>
+                <span className="text-xs text-violet-700 dark:text-violet-300">credits</span>
+              </div>
             )}
           </div>
         </div>
