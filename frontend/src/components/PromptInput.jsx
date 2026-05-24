@@ -15,7 +15,7 @@ export default function PromptInput({ prompt, setPrompt, onGenerate, isLoading }
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="w-full max-w-2xl mx-auto px-4">
+      className="w-full max-w-2xl mx-auto px-1">
       <div className="bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-black/30 rounded-2xl overflow-hidden">
         <div className="m-3 rounded-xl overflow-hidden">
           <textarea

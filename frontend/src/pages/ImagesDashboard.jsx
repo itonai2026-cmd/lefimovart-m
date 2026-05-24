@@ -40,6 +40,7 @@ export default function ImagesDashboard() {
       tabs={tabs} 
       activeTab={activeTab} 
       onTabChange={handleTabChange}
+      headerCredits={credits}
     >
       {activeTab === 'generate' && (
         <GenerateImageTab credits={credits} setCredits={setCredits} />
