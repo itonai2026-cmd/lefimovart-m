@@ -52,7 +52,12 @@ export default function Gallery() {
   };
 
   const handleFlagged = (imageId) => {
-    setImages((prev) => prev.filter((image) => image.id !== imageId));
+    setImages((prev) => {
+      const next = prev.filter((image) => image.id !== imageId);
+      const maxPage = Math.max(1, Math.ceil(next.length / IMAGES_PER_PAGE));
+      if (page > maxPage) setPage(maxPage);
+      return next;
+    });
   };
 
   const confirmDelete = async () => {
@@ -69,7 +74,12 @@ export default function Gallery() {
       });
       const data = await res.json();
       if (data.ok) {
-        setImages((prev) => prev.filter((x) => x.id !== deleteTarget.id));
+        setImages((prev) => {
+          const next = prev.filter((x) => x.id !== deleteTarget.id);
+          const maxPage = Math.max(1, Math.ceil(next.length / IMAGES_PER_PAGE));
+          if (page > maxPage) setPage(maxPage);
+          return next;
+        });
         toast.success("Image deleted.");
       } else {
         throw new Error(data.error || "Delete failed.");
@@ -104,6 +114,48 @@ export default function Gallery() {
           </div>
         ) : (
           <>
+            {(() => {
+              const totalPages = Math.ceil(images.length / IMAGES_PER_PAGE);
+              if (totalPages <= 1) return null;
+              return (
+                <div className="flex items-center justify-between mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setPage((current) => Math.max(1, current - 1))}
+                    disabled={page === 1}
+                    aria-label="Previous page"
+                    className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <div className="flex items-center gap-2 flex-wrap justify-center">
+                    {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+                      <button
+                        key={pageNumber}
+                        type="button"
+                        onClick={() => setPage(pageNumber)}
+                        className={`w-10 h-10 rounded-full text-sm transition-colors ${
+                          pageNumber === page
+                            ? "font-bold text-white bg-violet-600"
+                            : "text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
+                        }`}
+                      >
+                        {pageNumber}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                    disabled={page === totalPages}
+                    aria-label="Next page"
+                    className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+              );
+            })()}
             <div className="grid grid-cols-2 gap-3">
               {images.slice((page - 1) * IMAGES_PER_PAGE, page * IMAGES_PER_PAGE).map((img, i) => (
                 <motion.div
@@ -113,7 +165,7 @@ export default function Gallery() {
                   transition={{ delay: i * 0.04 }}>
                   <div className="rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md active:scale-95 transition-all relative group">
                     <div className="absolute z-10" style={{ top: "2px", left: "2px" }}>
-                      <GalleryImageMenu imageId={img.id} onFlagged={handleFlagged} />
+                      <GalleryImageMenu imageId={img.id} imageUrl={img.image_url} onFlagged={handleFlagged} />
                     </div>
                     <button
                       type="button"

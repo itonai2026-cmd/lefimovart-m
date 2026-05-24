@@ -111,7 +111,7 @@ export default function ImageSettings({ settings, setSettings, credits, onImageU
             <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">Use</span>
             <div className="flex items-center gap-1.5 bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-800 rounded-xl px-3 py-1.5">
               <span className="text-sm font-bold text-violet-700 dark:text-violet-300">{cost}</span>
-              <span className="text-xs leading-none" aria-hidden>🪙</span>
+              <span className="text-base leading-none" aria-hidden>🪙</span>
             </div>
           </div>
 
@@ -122,7 +122,7 @@ export default function ImageSettings({ settings, setSettings, credits, onImageU
             ) : (
               <div className="flex items-center gap-1.5 bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-800 rounded-xl px-3 py-1.5">
                 <span className="text-sm font-bold text-violet-700 dark:text-violet-300">{credits}</span>
-                <span className="text-xs leading-none" aria-hidden>🪙</span>
+                <span className="text-base leading-none" aria-hidden>🪙</span>
               </div>
             )}
           </div>

@@ -14,6 +14,7 @@ if (!$user) { json_response(['error' => 'Unauthorized'], 401); }
 
 $input = json_decode(file_get_contents('php://input'), true) ?: [];
 $id = (int)($input['id'] ?? 0);
+$imageUrl = trim((string)($input['image_url'] ?? ''));
 $flagged = trim((string)($input['flagged'] ?? ''));
 $allowed = [
     'Offensive content',
@@ -24,18 +25,28 @@ $allowed = [
     'Other',
 ];
 
-if ($id < 1 || !in_array($flagged, $allowed, true)) {
+if (($id < 1 && $imageUrl === '') || !in_array($flagged, $allowed, true)) {
     json_response(['ok' => false, 'error' => 'Invalid report.'], 400);
 }
 
 global $pdo;
 ensure_generated_images_flagged_column($pdo);
 
-$stmt = $pdo->prepare('UPDATE generated_images SET flagged = ? WHERE id = ? AND user_email = ?');
-$stmt->execute([$flagged, $id, $user['email']]);
+$identityWhere = $id > 0
+    ? '(id = ? OR image_url = ?)'
+    : 'image_url = ?';
+$identityParams = $id > 0 ? [$id, $imageUrl] : [$imageUrl];
+$ownerWhere = '(user_id = ? OR user_email = ?)';
 
-if ($stmt->rowCount() !== 1) {
+$check = $pdo->prepare("SELECT id FROM generated_images WHERE {$identityWhere} AND {$ownerWhere} LIMIT 1");
+$check->execute([...$identityParams, $user['id'], $user['email']]);
+$image = $check->fetch();
+
+if (!$image) {
     json_response(['ok' => false, 'error' => 'Image not found.'], 404);
 }
 
-json_response(['ok' => true, 'id' => $id, 'flagged' => $flagged]);
+$stmt = $pdo->prepare('UPDATE generated_images SET flagged = ? WHERE id = ?');
+$stmt->execute([$flagged, $image['id']]);
+
+json_response(['ok' => true, 'id' => (int)$image['id'], 'flagged' => $flagged]);
