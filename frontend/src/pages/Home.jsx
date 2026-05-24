@@ -1,5 +1,5 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { Settings } from 'lucide-react';
 import AppLogo from '../components/AppLogo';
@@ -9,6 +9,18 @@ import videoButtonBg from '../assets/landing-video-bg.png';
 export default function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+
+  const handleNavigate = (path) => {
+    if (!acceptedTerms) return;
+    navigate(path);
+  };
+
+  const buttonClassName = `w-full group relative overflow-hidden rounded-2xl border border-white/20 dark:border-slate-700 p-8 min-h-[148px] text-white font-bold transition-all duration-300 bg-cover bg-center shadow-lg shadow-black/20 ${
+    acceptedTerms
+      ? 'hover:shadow-2xl hover:scale-105 active:scale-95 cursor-pointer'
+      : 'opacity-70 cursor-not-allowed grayscale-[0.25]'
+  }`;
 
   return (
     <div className="min-h-screen bg-background dark:bg-slate-950 flex flex-col items-center justify-center p-6">
@@ -34,7 +46,7 @@ export default function Home() {
           <h1 className="text-4xl sm:text-5xl font-bold text-indigo-600 dark:text-violet-400 tracking-widest">
             LefiMovArt
           </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400">
+          <p className="text-lg italic text-slate-600 dark:text-slate-400">
             Welcome, {user?.email}!
           </p>
           <p className="text-sm text-slate-500 dark:text-slate-500">
@@ -46,12 +58,13 @@ export default function Home() {
         <div className="flex flex-col gap-5">
           {/* AI Image Generation & Modification */}
           <button
-            onClick={() => navigate('/ai-images')}
-            className="w-full group relative overflow-hidden rounded-2xl border border-white/20 dark:border-slate-700 p-8 min-h-[148px] text-white font-bold transition-all duration-300 bg-cover bg-center shadow-lg shadow-black/20 hover:shadow-2xl hover:scale-105 active:scale-95"
+            onClick={() => handleNavigate('/ai-images')}
+            disabled={!acceptedTerms}
+            className={buttonClassName}
             style={{ backgroundImage: `url('${imageButtonBg}')` }}
           >
-            <div className="absolute inset-0 bg-black/45 group-hover:bg-black/35 transition-colors" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-black/25 group-hover:bg-black/20 transition-colors" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
             <div className="relative flex min-h-[84px] flex-col items-center justify-center gap-2">
               <div>
                 <p className="text-2xl sm:text-3xl font-bold tracking-wide drop-shadow-[0_3px_8px_rgba(0,0,0,0.95)]">AI Image Generation</p>
@@ -62,12 +75,13 @@ export default function Home() {
 
           {/* AI Video Generation */}
           <button
-            onClick={() => navigate('/ai-videos')}
-            className="w-full group relative overflow-hidden rounded-2xl border border-white/20 dark:border-slate-700 p-8 min-h-[148px] text-white font-bold transition-all duration-300 bg-cover bg-center shadow-lg shadow-black/20 hover:shadow-2xl hover:scale-105 active:scale-95"
+            onClick={() => handleNavigate('/ai-videos')}
+            disabled={!acceptedTerms}
+            className={buttonClassName}
             style={{ backgroundImage: `url('${videoButtonBg}')` }}
           >
-            <div className="absolute inset-0 bg-black/45 group-hover:bg-black/35 transition-colors" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-black/25 group-hover:bg-black/20 transition-colors" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
             <div className="relative flex min-h-[84px] flex-col items-center justify-center gap-2">
               <div>
                 <p className="text-2xl sm:text-3xl font-bold tracking-wide drop-shadow-[0_3px_8px_rgba(0,0,0,0.95)]">AI Video Generation</p>
@@ -77,13 +91,35 @@ export default function Home() {
           </button>
         </div>
 
+        <label className="flex items-start gap-3 rounded-xl border border-white/20 dark:border-slate-700 bg-white/10 dark:bg-slate-800/50 px-4 py-3 text-left text-sm text-slate-700 dark:text-slate-300">
+          <input
+            type="checkbox"
+            checked={acceptedTerms}
+            onChange={(event) => setAcceptedTerms(event.target.checked)}
+            className="mt-1 h-4 w-4 shrink-0 accent-violet-600"
+          />
+          <span>
+            I agree to the{' '}
+            <Link to="/terms" className="font-semibold text-indigo-600 dark:text-violet-400 hover:underline">
+              Terms of use
+            </Link>{' '}
+            and the{' '}
+            <Link to="/privacy" className="font-semibold text-indigo-600 dark:text-violet-400 hover:underline">
+              Privacy Policy
+            </Link>
+          </span>
+        </label>
+
         {/* Credits info */}
         <div className="rounded-xl bg-white/10 dark:bg-slate-800/50 backdrop-blur-sm border border-white/20 dark:border-slate-700 p-4">
           <p className="text-sm text-slate-700 dark:text-slate-300">
             <span className="font-bold text-indigo-600 dark:text-violet-400">{user?.credits || 0} Credits</span> Available
           </p>
           <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-            Each operation costs credits. Buy more if needed!
+            Only AI operations consume credits
+          </p>
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+            You only pay for what you use — no subscriptions!
           </p>
         </div>
       </div>
