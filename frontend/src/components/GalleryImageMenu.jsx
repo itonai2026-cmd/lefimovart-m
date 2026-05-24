@@ -12,7 +12,7 @@ const REPORT_OPTIONS = [
   "Other",
 ];
 
-export default function GalleryImageMenu({ imageId, onFlagged, alignLeft = true }) {
+export default function GalleryImageMenu({ imageId, imageUrl, onFlagged, alignLeft = true }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState("");
   const [sending, setSending] = useState(false);
@@ -63,7 +63,7 @@ export default function GalleryImageMenu({ imageId, onFlagged, alignLeft = true 
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify({ id: imageId, flagged: selected }),
+        body: JSON.stringify({ id: imageId, image_url: imageUrl, flagged: selected }),
       });
       const data = await response.json();
       if (!data.ok) throw new Error(data.error || "Could not send report.");
@@ -88,7 +88,7 @@ export default function GalleryImageMenu({ imageId, onFlagged, alignLeft = true 
         className="flex items-center justify-center rounded-full bg-black/55 hover:bg-black/70 text-white text-xs font-bold select-none transition-colors"
         style={{ letterSpacing: "0.05em", width: "30px", height: "30px", minWidth: "30px", minHeight: "30px" }}
       >
-        ...
+        ···
       </button>
 
       {createPortal(
