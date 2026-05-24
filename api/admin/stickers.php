@@ -75,7 +75,7 @@ if ($method === 'POST') {
         json_response(['error' => 'Invalid file type. Allowed: PNG, JPG, WebP, SVG, GIF'], 400);
     }
 
-    $stickerDir = __DIR__ . '/../../uploads/stickers/';
+    $stickerDir = __DIR__ . '/../../stickers/';
     if (!is_dir($stickerDir)) {
         mkdir($stickerDir, 0755, true);
     }
@@ -88,7 +88,7 @@ if ($method === 'POST') {
         json_response(['error' => 'Failed to save file'], 500);
     }
 
-    $url = BASE_PATH . '/uploads/stickers/' . $filename;
+    $url = BASE_PATH . '/stickers/' . $filename;
 
     $stmt = $pdo->prepare('INSERT INTO stickers (name, url, category) VALUES (?, ?, ?)');
     $stmt->execute([$name, $url, $category]);

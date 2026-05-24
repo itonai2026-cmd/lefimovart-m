@@ -16,6 +16,11 @@ export default defineConfig({
         target: 'http://localhost',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/wp\/lefimovart/, '')
+      },
+      '/wp/lefimovart/stickers': {
+        target: 'http://localhost',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/wp\/lefimovart/, '')
       }
     }
   },
