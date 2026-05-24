@@ -45,15 +45,15 @@ export default function Home() {
           {/* AI Image Generation & Modification */}
           <button
             onClick={() => navigate('/ai-images')}
-            className="w-full group relative overflow-hidden rounded-2xl p-8 text-white font-bold text-lg transition-all duration-300 hover:shadow-2xl hover:scale-105 active:scale-95"
+            className="w-full group relative overflow-hidden rounded-2xl p-8 min-h-[148px] text-white font-bold transition-all duration-300 bg-cover bg-center hover:shadow-2xl hover:scale-105 active:scale-95"
+            style={{ backgroundImage: "url('/wp/lefimovart/landing-image-bg.png')" }}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-indigo-600 group-hover:from-violet-700 group-hover:to-indigo-700 transition-all" />
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-white/10 transition-opacity" />
-            <div className="relative flex flex-col items-center gap-3">
-              <span className="text-4xl">🎨</span>
+            <div className="absolute inset-0 bg-black/45 group-hover:bg-black/35 transition-colors" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <div className="relative flex min-h-[84px] flex-col items-center justify-center gap-2">
               <div>
-                <p className="font-bold">AI Image Generation</p>
-                <p className="text-sm font-normal text-violet-100">Generate & Modify Images</p>
+                <p className="text-2xl sm:text-3xl font-bold tracking-wide drop-shadow-[0_3px_8px_rgba(0,0,0,0.95)]">AI Image Generation</p>
+                <p className="text-base sm:text-lg font-semibold text-violet-100 drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">Generate & Modify Images</p>
               </div>
             </div>
           </button>
@@ -61,15 +61,15 @@ export default function Home() {
           {/* AI Video Generation */}
           <button
             onClick={() => navigate('/ai-videos')}
-            className="w-full group relative overflow-hidden rounded-2xl p-8 text-white font-bold text-lg transition-all duration-300 hover:shadow-2xl hover:scale-105 active:scale-95"
+            className="w-full group relative overflow-hidden rounded-2xl p-8 min-h-[148px] text-white font-bold transition-all duration-300 bg-cover bg-center hover:shadow-2xl hover:scale-105 active:scale-95"
+            style={{ backgroundImage: "url('/wp/lefimovart/landing-video-bg.png')" }}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 group-hover:from-indigo-700 group-hover:to-purple-700 transition-all" />
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-white/10 transition-opacity" />
-            <div className="relative flex flex-col items-center gap-3">
-              <span className="text-4xl">🎬</span>
+            <div className="absolute inset-0 bg-black/45 group-hover:bg-black/35 transition-colors" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <div className="relative flex min-h-[84px] flex-col items-center justify-center gap-2">
               <div>
-                <p className="font-bold">AI Video Generation</p>
-                <p className="text-sm font-normal text-purple-100">Create Amazing Videos</p>
+                <p className="text-2xl sm:text-3xl font-bold tracking-wide drop-shadow-[0_3px_8px_rgba(0,0,0,0.95)]">AI Video Generation</p>
+                <p className="text-base sm:text-lg font-semibold text-purple-100 drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">Create Amazing Videos</p>
               </div>
             </div>
           </button>
