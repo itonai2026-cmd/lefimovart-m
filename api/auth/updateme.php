@@ -29,12 +29,28 @@ if (!$user) {
 $data = json_decode(file_get_contents('php://input'), true);
 
 try {
-    $credits = max(0, (int)($data['credits'] ?? 0));
-    $stmt = $pdo->prepare('UPDATE users SET credits = :credits WHERE id = :id');
-    $stmt->execute([
-        ':credits' => $credits,
-        ':id' => $user['id']
-    ]);
+    ensure_users_accepted_terms_column();
+
+    $updates = [];
+    $params = [':id' => $user['id']];
+
+    if (array_key_exists('credits', $data)) {
+        $updates[] = 'credits = :credits';
+        $params[':credits'] = max(0, (int)$data['credits']);
+    }
+
+    if (array_key_exists('accepted_terms', $data)) {
+        $updates[] = 'accepted_terms = :accepted_terms';
+        $params[':accepted_terms'] = !empty($data['accepted_terms']) ? 1 : 0;
+    }
+
+    if (!$updates) {
+        echo json_encode(['ok' => false, 'error' => 'No supported fields provided']);
+        exit;
+    }
+
+    $stmt = $pdo->prepare('UPDATE users SET ' . implode(', ', $updates) . ' WHERE id = :id');
+    $stmt->execute($params);
 
     $fresh = get_authenticated_user();
 

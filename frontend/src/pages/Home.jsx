@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { Settings } from 'lucide-react';
@@ -8,12 +8,43 @@ import videoButtonBg from '../assets/landing-video-bg.png';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const { user, setUser } = useAuth();
+  const [acceptedTerms, setAcceptedTerms] = useState(Boolean(Number(user?.accepted_terms || 0)));
+  const termsAcceptedKey = useMemo(
+    () => `lefimovart:termsAccepted:${user?.email || 'anonymous'}`,
+    [user?.email]
+  );
+
+  useEffect(() => {
+    const acceptedInAccount = Boolean(Number(user?.accepted_terms || 0));
+    setAcceptedTerms(acceptedInAccount || localStorage.getItem(termsAcceptedKey) === 'true');
+  }, [termsAcceptedKey, user?.accepted_terms]);
 
   const handleNavigate = (path) => {
     if (!acceptedTerms) return;
     navigate(path);
+  };
+
+  const handleTermsChange = async (event) => {
+    const checked = event.target.checked;
+    setAcceptedTerms(checked);
+    localStorage.setItem(termsAcceptedKey, checked ? 'true' : 'false');
+    try {
+      const response = await fetch('/wp/lefimovart/api/auth/updateme.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ accepted_terms: checked ? 1 : 0 }),
+      });
+      const data = await response.json();
+      if (!data.ok) throw new Error(data.error || 'Could not save terms acceptance');
+      if (data.user) setUser(data.user);
+    } catch {
+      setAcceptedTerms(!checked);
+      localStorage.setItem(termsAcceptedKey, !checked ? 'true' : 'false');
+    }
   };
 
   const buttonClassName = `w-full group relative overflow-hidden rounded-2xl border border-white/20 dark:border-slate-700 p-8 min-h-[148px] text-white font-bold transition-all duration-300 bg-cover bg-center shadow-lg shadow-black/20 ${
@@ -95,7 +126,7 @@ export default function Home() {
           <input
             type="checkbox"
             checked={acceptedTerms}
-            onChange={(event) => setAcceptedTerms(event.target.checked)}
+            onChange={handleTermsChange}
             className="mt-1 h-4 w-4 shrink-0 accent-violet-600"
           />
           <span>
