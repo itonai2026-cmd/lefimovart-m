@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Sun, Moon } from "lucide-react";
+import { ChevronLeft, Sun, Moon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 
-export default function Layout({ children, tabs, activeTab, onTabChange }) {
-  const { user, logout } = useAuth();
+export default function Layout({ children, tabs, activeTab, onTabChange, headerCredits }) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [dark, setDark] = useState(() => {
     const saved = localStorage.getItem("theme");
     if (saved === "light") return false;
@@ -44,23 +46,29 @@ export default function Layout({ children, tabs, activeTab, onTabChange }) {
         }}
         role="banner"
       >
-        <h1 className="text-lg font-bold text-indigo-600 dark:text-violet-400 tracking-widest">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="flex items-center justify-center min-w-[44px] min-h-[44px] -ml-2 rounded-xl text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+
+        <h1 className="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-indigo-600 dark:text-violet-400 tracking-widest pointer-events-none">
           LefiMovArt
         </h1>
-        <div className="flex items-center gap-4">
-          <div className="text-right text-sm">
-            <p className="font-semibold text-foreground">{user?.email}</p>
-            <p className="text-xs text-primary">{user?.credits} credits</p>
-          </div>
+
+        <div className="flex items-center gap-3">
+          <p className="text-sm font-semibold text-primary whitespace-nowrap">
+            {headerCredits ?? user?.credits ?? 0} credits
+          </p>
           <button
             onClick={() => setDark((d) => !d)}
             className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-xl text-slate-400 dark:text-slate-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all"
             aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
           >
             {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-          <button onClick={logout} className="text-red-400 text-sm hover:text-red-500 font-bold">
-            Logout
           </button>
         </div>
       </header>
