@@ -8,6 +8,22 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/jwt.php';
 require_once __DIR__ . '/email.php';
 
+function ensure_users_accepted_terms_column(): void {
+    global $pdo;
+
+    $stmt = $pdo->prepare(
+        'SELECT COUNT(*)
+         FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = ?
+           AND TABLE_NAME = ?
+           AND COLUMN_NAME = ?'
+    );
+    $stmt->execute([DB_NAME, 'users', 'accepted_terms']);
+    if ((int)$stmt->fetchColumn() === 0) {
+        $pdo->exec('ALTER TABLE users ADD COLUMN accepted_terms TINYINT(1) NOT NULL DEFAULT 0');
+    }
+}
+
 function register_user(string $email, string $password, string $name = ''): array {
     global $pdo;
     
@@ -141,6 +157,7 @@ function google_oauth_login(string $code): array {
 }
 
 function generate_jwt_token(int $user_id): string {
+    ensure_users_accepted_terms_column();
     $stmt = $GLOBALS['pdo']->prepare('SELECT id, email, credits, role FROM users WHERE id = ?');
     $stmt->execute([$user_id]);
     $user = $stmt->fetch();
@@ -165,7 +182,8 @@ function get_authenticated_user(): ?array {
         return null;
     }
     
-    $stmt = $pdo->prepare('SELECT id, email, credits, role, name FROM users WHERE id = ?');
+    ensure_users_accepted_terms_column();
+    $stmt = $pdo->prepare('SELECT id, email, credits, role, name, accepted_terms FROM users WHERE id = ?');
     $stmt->execute([$payload['user_id']]);
     return $stmt->fetch();
 }

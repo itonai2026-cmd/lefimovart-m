@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Wand2, ImageIcon, Edit2, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
@@ -14,8 +14,10 @@ import GalleryPage from './Gallery';
 
 export default function ImagesDashboard() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('generate');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuth();
+  const initialTab = searchParams.get('tab') === 'gallery' ? 'gallery' : 'generate';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [credits, setCredits] = useState(user?.credits || 0);
 
   const tabs = [
@@ -25,13 +27,19 @@ export default function ImagesDashboard() {
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
+  useEffect(() => {
+    setActiveTab(searchParams.get('tab') === 'gallery' ? 'gallery' : 'generate');
+  }, [searchParams]);
+
   const handleTabChange = (tabId) => {
     if (tabId === 'edit') {
       navigate('/edit');
     } else if (tabId === 'settings') {
       navigate('/settings');
+    } else if (tabId === 'gallery') {
+      setSearchParams({ tab: 'gallery' });
     } else {
-      setActiveTab(tabId);
+      setSearchParams({});
     }
   };
 
