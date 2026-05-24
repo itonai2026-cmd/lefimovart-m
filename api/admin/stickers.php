@@ -22,16 +22,27 @@ if (($current_user['role'] ?? 'user') !== 'admin') { json_response(['error' => '
 
 global $pdo;
 
-// Auto-create stickers table if missing
-$pdo->exec("CREATE TABLE IF NOT EXISTS stickers (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL DEFAULT '',
-    url VARCHAR(512) NOT NULL,
-    category VARCHAR(100) NOT NULL DEFAULT 'Custom',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_category (category),
-    INDEX idx_created (created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+// Auto-create stickers table if missing (works on both MySQL and SQLite)
+$driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+if ($driver === 'sqlite') {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS stickers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL DEFAULT '',
+        url TEXT NOT NULL,
+        category TEXT NOT NULL DEFAULT 'Custom',
+        created_at TEXT DEFAULT (datetime('now'))
+    )");
+} else {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS stickers (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL DEFAULT '',
+        url VARCHAR(512) NOT NULL,
+        category VARCHAR(100) NOT NULL DEFAULT 'Custom',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_category (category),
+        INDEX idx_created (created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+}
 
 $method = $_SERVER['REQUEST_METHOD'];
 
