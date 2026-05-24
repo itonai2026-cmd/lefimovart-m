@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
+import { Settings } from 'lucide-react';
+import AppLogo from '../components/AppLogo';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -14,9 +16,19 @@ export default function Home() {
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-100/40 dark:bg-indigo-900/10 rounded-full blur-3xl" />
       </div>
 
+      <button
+        type="button"
+        onClick={() => navigate('/settings')}
+        className="fixed top-4 right-4 z-20 flex items-center justify-center min-w-[44px] min-h-[44px] rounded-xl text-slate-400 hover:text-violet-400 hover:bg-white/10 transition-all"
+        aria-label="Settings"
+      >
+        <Settings className="w-5 h-5" />
+      </button>
+
       <div className="relative z-10 text-center max-w-md mx-auto space-y-12">
         {/* Header */}
         <div className="space-y-4">
+          <AppLogo className="w-28 h-28 sm:w-32 sm:h-32" />
           <h1 className="text-4xl sm:text-5xl font-bold text-indigo-600 dark:text-violet-400 tracking-widest">
             LefiMovArt
           </h1>

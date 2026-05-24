@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Wand2, Film } from 'lucide-react';
+import { Wand2, Film, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/AuthContext';
 
 export default function VideosDashboard() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('generate');
   const [credits, setCredits] = useState(user?.credits || 0);
@@ -12,10 +14,15 @@ export default function VideosDashboard() {
   const tabs = [
     { id: 'generate', label: 'Generate', icon: Wand2 },
     { id: 'videos', label: 'My Videos', icon: Film },
+    { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   const handleTabChange = (tabId) => {
-    setActiveTab(tabId);
+    if (tabId === 'settings') {
+      navigate('/settings');
+    } else {
+      setActiveTab(tabId);
+    }
   };
 
   return (

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Wand2, ImageIcon, Edit2 } from 'lucide-react';
+import { Wand2, ImageIcon, Edit2, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
 import PromptInput from '../components/PromptInput';
@@ -8,6 +8,7 @@ import ImageSettings, { getCost } from '../components/ImageSettings';
 import StyleSelector from '../components/StyleSelector';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/AuthContext';
+import AppLogo from '../components/AppLogo';
 
 import GalleryPage from './Gallery';
 
@@ -21,11 +22,14 @@ export default function ImagesDashboard() {
     { id: 'generate', label: 'Generate', icon: Wand2 },
     { id: 'gallery', label: 'Gallery', icon: ImageIcon },
     { id: 'edit', label: 'Edit', icon: Edit2 },
+    { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   const handleTabChange = (tabId) => {
     if (tabId === 'edit') {
       navigate('/edit');
+    } else if (tabId === 'settings') {
+      navigate('/settings');
     } else {
       setActiveTab(tabId);
     }
@@ -140,6 +144,7 @@ function GenerateImageTab({ credits, setCredits }) {
   return (
     <div className="min-h-full bg-background dark:bg-slate-950" role="region" aria-label="Image generation">
       <div className="relative z-10 px-4 py-4 sm:py-10">
+        <AppLogo className="w-24 h-24 sm:w-28 sm:h-28 mb-3" />
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}

@@ -5,7 +5,6 @@ header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../includes/jwt.php';
 require_once __DIR__ . '/../includes/auth.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -19,7 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$user = authenticateRequest();
+$payload = require_auth();
+$user = get_authenticated_user();
 if (!$user) {
     http_response_code(401);
     echo json_encode(['ok' => false, 'error' => 'Unauthorized']);
@@ -29,15 +29,18 @@ if (!$user) {
 $data = json_decode(file_get_contents('php://input'), true);
 
 try {
+    $credits = max(0, (int)($data['credits'] ?? 0));
     $stmt = $pdo->prepare('UPDATE users SET credits = :credits WHERE id = :id');
     $stmt->execute([
-        ':credits' => $data['credits'] ?? 0,
+        ':credits' => $credits,
         ':id' => $user['id']
     ]);
 
+    $fresh = get_authenticated_user();
+
     echo json_encode([
         'ok' => true,
-        'user' => array_merge($user, ['credits' => $data['credits'] ?? 0])
+        'user' => $fresh
     ]);
 } catch (Exception $e) {
     http_response_code(500);

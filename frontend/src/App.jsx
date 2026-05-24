@@ -16,6 +16,10 @@ import BuyCredits from './pages/BuyCredits';
 import EditImage from './pages/EditImage';
 import ForgotPassword from './pages/ForgotPassword';
 import VerifyEmail from './pages/VerifyEmail';
+import SettingsPage from './pages/SettingsPage';
+import AdminPanel from './pages/AdminPanel';
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -76,6 +80,11 @@ function App() {
                 <Route path="/generate-video" element={<GenerateVideo />} />
                 <Route path="/videos" element={<VideoGallery />} />
                 <Route path="/buy-credits" element={<BuyCredits />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/admin" element={<AdminPanel />} />
+                <Route path="/AdminPanel" element={<AdminPanel />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/terms" element={<TermsPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </>
             )}
