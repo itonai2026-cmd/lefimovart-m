@@ -62,8 +62,14 @@ export default function EditFilterPanel({
 
   useEffect(() => {
     if (activeFilter !== "stickers") return;
-    // Stickers not available in lefimovart (no sticker backend)
-    setStickersLoading(false);
+    setStickersLoading(true);
+    fetch("/wp/lefimovart/api/stickers/list.php", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    })
+      .then((r) => r.json())
+      .then((data) => { if (data.ok) setStickers(data.stickers || []); })
+      .catch(() => {})
+      .finally(() => setStickersLoading(false));
   }, [activeFilter]);
   if (activeFilter === "ai") {
     return (

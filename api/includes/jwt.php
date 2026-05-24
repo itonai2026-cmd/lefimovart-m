@@ -62,9 +62,19 @@ function base64url_decode($data) {
 }
 
 function get_jwt_from_header() {
-    $headers = getallheaders();
-    $auth_header = $headers['Authorization'] ?? '';
-    
+    $auth_header = '';
+
+    // Try getallheaders() first (works on Apache, nginx via php-fpm)
+    if (function_exists('getallheaders')) {
+        $headers = getallheaders();
+        $auth_header = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+    }
+
+    // Fallback: $_SERVER (works on PHP built-in server & CGI)
+    if (empty($auth_header)) {
+        $auth_header = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+    }
+
     if (preg_match('/Bearer\s+(.*)$/i', $auth_header, $matches)) {
         return $matches[1];
     }
