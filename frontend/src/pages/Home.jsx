@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { Settings } from 'lucide-react';
 import AppLogo from '../components/AppLogo';
+import imageButtonBg from '../assets/landing-image-bg.png';
+import videoButtonBg from '../assets/landing-video-bg.png';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -41,12 +43,12 @@ export default function Home() {
         </div>
 
         {/* Main buttons */}
-        <div className="space-y-4">
+        <div className="flex flex-col gap-5">
           {/* AI Image Generation & Modification */}
           <button
             onClick={() => navigate('/ai-images')}
-            className="w-full group relative overflow-hidden rounded-2xl p-8 min-h-[148px] text-white font-bold transition-all duration-300 bg-cover bg-center hover:shadow-2xl hover:scale-105 active:scale-95"
-            style={{ backgroundImage: "url('/wp/lefimovart/landing-image-bg.png')" }}
+            className="w-full group relative overflow-hidden rounded-2xl border border-white/20 dark:border-slate-700 p-8 min-h-[148px] text-white font-bold transition-all duration-300 bg-cover bg-center shadow-lg shadow-black/20 hover:shadow-2xl hover:scale-105 active:scale-95"
+            style={{ backgroundImage: `url('${imageButtonBg}')` }}
           >
             <div className="absolute inset-0 bg-black/45 group-hover:bg-black/35 transition-colors" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
@@ -61,8 +63,8 @@ export default function Home() {
           {/* AI Video Generation */}
           <button
             onClick={() => navigate('/ai-videos')}
-            className="w-full group relative overflow-hidden rounded-2xl p-8 min-h-[148px] text-white font-bold transition-all duration-300 bg-cover bg-center hover:shadow-2xl hover:scale-105 active:scale-95"
-            style={{ backgroundImage: "url('/wp/lefimovart/landing-video-bg.png')" }}
+            className="w-full group relative overflow-hidden rounded-2xl border border-white/20 dark:border-slate-700 p-8 min-h-[148px] text-white font-bold transition-all duration-300 bg-cover bg-center shadow-lg shadow-black/20 hover:shadow-2xl hover:scale-105 active:scale-95"
+            style={{ backgroundImage: `url('${videoButtonBg}')` }}
           >
             <div className="absolute inset-0 bg-black/45 group-hover:bg-black/35 transition-colors" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
