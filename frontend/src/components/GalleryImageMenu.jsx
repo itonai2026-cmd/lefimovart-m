@@ -63,7 +63,7 @@ export default function GalleryImageMenu({ imageId, imageUrl, onFlagged, alignLe
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify({ id: imageId, image_url: imageUrl, flagged: selected }),
+        body: JSON.stringify({ id: imageId, image_url: imageUrl, flagged_reason: selected }),
       });
       const data = await response.json();
       if (!data.ok) throw new Error(data.error || "Could not send report.");

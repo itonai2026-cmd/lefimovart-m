@@ -10,6 +10,11 @@ function ensure_generated_images_flagged_column(PDO $pdo): void {
     );
     $stmt->execute([DB_NAME, 'generated_images', 'flagged']);
     if ((int)$stmt->fetchColumn() === 0) {
-        $pdo->exec('ALTER TABLE generated_images ADD COLUMN flagged VARCHAR(80) NULL DEFAULT NULL');
+        $pdo->exec('ALTER TABLE generated_images ADD COLUMN flagged TINYINT(1) NOT NULL DEFAULT 0');
+    }
+
+    $stmt->execute([DB_NAME, 'generated_images', 'flagged_reason']);
+    if ((int)$stmt->fetchColumn() === 0) {
+        $pdo->exec('ALTER TABLE generated_images ADD COLUMN flagged_reason VARCHAR(120) NULL DEFAULT NULL');
     }
 }

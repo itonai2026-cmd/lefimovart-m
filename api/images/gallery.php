@@ -14,7 +14,7 @@ global $pdo;
 ensure_generated_images_flagged_column($pdo);
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $stmt = $pdo->prepare("SELECT id, image_url, prompt, created_at FROM generated_images WHERE user_email = ? AND status = ? AND image_url IS NOT NULL AND (flagged IS NULL OR flagged = '') ORDER BY created_at DESC LIMIT 50");
+    $stmt = $pdo->prepare("SELECT id, image_url, prompt, created_at FROM generated_images WHERE user_email = ? AND status = ? AND image_url IS NOT NULL AND (flagged IS NULL OR flagged = 0 OR flagged = '' OR flagged = '0') ORDER BY created_at DESC LIMIT 50");
     $stmt->execute([$user['email'], 'ready']);
     $images = $stmt->fetchAll();
     json_response(['ok' => true, 'images' => $images]);
