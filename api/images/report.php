@@ -15,7 +15,7 @@ if (!$user) { json_response(['error' => 'Unauthorized'], 401); }
 $input = json_decode(file_get_contents('php://input'), true) ?: [];
 $id = (int)($input['id'] ?? 0);
 $imageUrl = trim((string)($input['image_url'] ?? ''));
-$flagged = trim((string)($input['flagged'] ?? ''));
+$reason = trim((string)($input['flagged_reason'] ?? $input['flagged'] ?? ''));
 $allowed = [
     'Offensive content',
     'Sexual content / NSFW',
@@ -25,7 +25,7 @@ $allowed = [
     'Other',
 ];
 
-if (($id < 1 && $imageUrl === '') || !in_array($flagged, $allowed, true)) {
+if (($id < 1 && $imageUrl === '') || !in_array($reason, $allowed, true)) {
     json_response(['ok' => false, 'error' => 'Invalid report.'], 400);
 }
 
@@ -46,7 +46,7 @@ if (!$image) {
     json_response(['ok' => false, 'error' => 'Image not found.'], 404);
 }
 
-$stmt = $pdo->prepare('UPDATE generated_images SET flagged = ? WHERE id = ?');
-$stmt->execute([$flagged, $image['id']]);
+$stmt = $pdo->prepare('UPDATE generated_images SET flagged = 1, flagged_reason = ? WHERE id = ?');
+$stmt->execute([$reason, $image['id']]);
 
-json_response(['ok' => true, 'id' => (int)$image['id'], 'flagged' => $flagged]);
+json_response(['ok' => true, 'id' => (int)$image['id'], 'flagged' => 1, 'flagged_reason' => $reason]);
