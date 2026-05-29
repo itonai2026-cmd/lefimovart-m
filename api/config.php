@@ -125,7 +125,7 @@ $MODELS_CONFIG = [
         ],
     ],
     'kling_25' => [
-        'name'             => 'Kling 2.5',
+        'name'             => 'Kling 2.5 Pro',
         'description'      => 'Top-tier cinematic quality with unparalleled motion fluidity and prompt precision.',
         'tier'             => 'high',
         'api_endpoint'     => 'https://queue.fal.run/fal-ai/kling-video/v2.5-turbo/pro/text-to-video',
