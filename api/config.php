@@ -81,19 +81,30 @@ define('FAL_AI_BASE_URL', 'https://queue.fal.run');
 // Kling 2.5 Pro $0.35/5s, +$0.07/sec after
 $MODELS_CONFIG = [
     'kling_o3' => [
-        'name'             => 'Kling O3 Standard',
+        'name'             => 'Kling O3',
         'description'      => 'Latest Kling model with realistic motion and multi-shot support. Great value.',
         'tier'             => 'low',
         'api_endpoint'     => 'https://queue.fal.run/fal-ai/kling-video/o3/standard/text-to-video',
         'api_endpoint_i2v' => 'https://queue.fal.run/fal-ai/kling-video/o3/standard/image-to-video',
         'aspect_ratios'    => ['16:9', '9:16', '1:1'],
-        'resolutions'      => ['default'],
+        'resolutions'      => ['720p', '1080p'],
+        'endpoint_map'     => [
+            '720p'  => [
+                'api_endpoint'     => 'https://queue.fal.run/fal-ai/kling-video/o3/standard/text-to-video',
+                'api_endpoint_i2v' => 'https://queue.fal.run/fal-ai/kling-video/o3/standard/image-to-video',
+            ],
+            '1080p' => [
+                'api_endpoint'     => 'https://queue.fal.run/fal-ai/kling-video/o3/pro/text-to-video',
+                'api_endpoint_i2v' => 'https://queue.fal.run/fal-ai/kling-video/o3/pro/image-to-video',
+            ],
+        ],
         'duration_param'   => 'duration',
         'duration_map'     => [4 => '4', 6 => '6', 8 => '8', 10 => '10'],
         'fps_default'      => null,
         'extra_params'     => [],
         'cost_table'       => [
-            'default' => [4 => 3, 6 => 5, 8 => 7, 10 => 8],
+            '720p'  => [4 => 3, 6 => 5, 8 => 7, 10 => 8],
+            '1080p' => [4 => 4, 6 => 7, 8 => 9, 10 => 11],
         ],
     ],
     'wan_27' => [
@@ -114,19 +125,30 @@ $MODELS_CONFIG = [
         ],
     ],
     'kling_25' => [
-        'name'             => 'Kling 2.5 Pro',
+        'name'             => 'Kling 2.5',
         'description'      => 'Top-tier cinematic quality with unparalleled motion fluidity and prompt precision.',
         'tier'             => 'high',
         'api_endpoint'     => 'https://queue.fal.run/fal-ai/kling-video/v2.5-turbo/pro/text-to-video',
         'api_endpoint_i2v' => 'https://queue.fal.run/fal-ai/kling-video/v2.5-turbo/pro/image-to-video',
         'aspect_ratios'    => ['16:9', '9:16', '1:1'],
-        'resolutions'      => ['default'],
+        'resolutions'      => ['720p', '1080p'],
+        'endpoint_map'     => [
+            '720p'  => [
+                'api_endpoint'     => 'https://queue.fal.run/fal-ai/kling-video/v2.5-turbo/standard/text-to-video',
+                'api_endpoint_i2v' => 'https://queue.fal.run/fal-ai/kling-video/v2.5-turbo/standard/image-to-video',
+            ],
+            '1080p' => [
+                'api_endpoint'     => 'https://queue.fal.run/fal-ai/kling-video/v2.5-turbo/pro/text-to-video',
+                'api_endpoint_i2v' => 'https://queue.fal.run/fal-ai/kling-video/v2.5-turbo/pro/image-to-video',
+            ],
+        ],
         'duration_param'   => 'duration',
         'duration_map'     => [4 => '5', 6 => '5', 8 => '10', 10 => '10'],
         'fps_default'      => null,
         'extra_params'     => [],
         'cost_table'       => [
-            'default' => [4 => 6, 6 => 8, 8 => 10, 10 => 12],
+            '720p'  => [4 => 3, 6 => 5, 8 => 7, 10 => 8],
+            '1080p' => [4 => 6, 6 => 8, 8 => 10, 10 => 12],
         ],
     ],
 ];

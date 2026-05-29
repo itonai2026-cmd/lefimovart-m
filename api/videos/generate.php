@@ -46,7 +46,17 @@ $user = get_authenticated_user();
 if (!$user || $user['credits'] < $cost) { json_response(['error' => 'Insufficient credits'], 400); }
 
 $is_i2v = ($image_url !== '');
-$endpoint = $is_i2v ? $config['api_endpoint_i2v'] : $config['api_endpoint'];
+
+// Use resolution-specific endpoint if endpoint_map exists
+$ep_key_t2v = 'api_endpoint';
+$ep_key_i2v = 'api_endpoint_i2v';
+if (isset($config['endpoint_map'][$resolution])) {
+    $endpoint = $is_i2v
+        ? $config['endpoint_map'][$resolution][$ep_key_i2v]
+        : $config['endpoint_map'][$resolution][$ep_key_t2v];
+} else {
+    $endpoint = $is_i2v ? $config[$ep_key_i2v] : $config[$ep_key_t2v];
+}
 
 $fal_payload = [];
 
