@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Wand2, Film, Settings, ImageIcon, ChevronDown, Sparkles, Loader2 } from 'lucide-react';
+import { Wand2, Film, Settings, ImageIcon, ChevronDown, Sparkles, Loader2, Clock, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
@@ -63,6 +63,19 @@ function getMinCost(modelKey) {
 
 const RES_LABELS = { '480p': '480p SD', '720p': '720p HD', '1080p': '1080p FHD' };
 
+const EST_TIME = {
+  kling_o3:  { '720p': { 4: '1-2',  6: '1.5-2.5', 8: '2-3',   10: '2.5-4' },
+               '1080p': { 4: '1.5-3', 6: '2-3.5', 8: '2.5-4', 10: '3-5' } },
+  wan_27:    { '720p': { 4: '2-3',  6: '2.5-4', 8: '3-5',   10: '3.5-5' },
+               '1080p': { 4: '2.5-4', 6: '3-5',   8: '4-6',   10: '4.5-7' } },
+  kling_25:  { '720p': { 4: '2-3',  6: '2-3',   8: '3-5',   10: '3-5' },
+               '1080p': { 4: '2.5-4', 6: '2.5-4', 8: '4-6',   10: '4-6' } },
+};
+
+function getEstTime(modelKey, resolution, duration) {
+  return EST_TIME[modelKey]?.[resolution]?.[duration] || '2-5';
+}
+
 const TIER_COLORS = {
   low: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700',
   medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200 dark:border-amber-700',
@@ -121,7 +134,7 @@ export default function VideosDashboard() {
       headerCredits={credits}
     >
       {activeTab === 'generate' && (
-        <GenerateVideoTab credits={credits} setCredits={setCredits} />
+        <GenerateVideoTab credits={credits} setCredits={setCredits} onGoToGallery={() => setActiveTab('videos')} />
       )}
       {activeTab === 'videos' && (
         <VideoGalleryTab />
@@ -158,7 +171,7 @@ function StyleDropdown({ title, options, value, onChange }) {
   );
 }
 
-function GenerateVideoTab({ credits, setCredits }) {
+function GenerateVideoTab({ credits, setCredits, onGoToGallery }) {
   const { user } = useAuth();
   const [prompt, setPrompt] = useState('');
   const [model, setModel] = useState('wan_27');
@@ -170,8 +183,11 @@ function GenerateVideoTab({ credits, setCredits }) {
   const [styleFilters, setStyleFilters] = useState({ artistic: '', lighting: '', technical: '' });
   const fileInputRef = useRef(null);
 
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [overlayEstTime, setOverlayEstTime] = useState('');
   const currentModel = VIDEO_MODELS[model];
   const cost = getCost(model, resolution, parseInt(duration, 10));
+  const estTime = getEstTime(model, resolution, parseInt(duration, 10));
 
   const referenceImageUrl = useMemo(
     () => (referenceImage ? URL.createObjectURL(referenceImage) : null),
@@ -266,8 +282,9 @@ function GenerateVideoTab({ credits, setCredits }) {
       const data = await res.json();
       if (!data.ok) throw new Error(data.error);
 
-      toast.success('Video generation started! Check your videos list for status.');
       setCredits(credits - cost);
+      setOverlayEstTime(getEstTime(model, resolution, parseInt(duration, 10)));
+      setShowOverlay(true);
       setPrompt('');
       setReferenceImage(null);
     } catch (e) {
@@ -327,7 +344,7 @@ function GenerateVideoTab({ credits, setCredits }) {
               ) : (
                 <>
                   <Sparkles className="w-4 h-4" />
-                  Generate ({cost} &#x1FA99;)
+                  Generate ({cost} &#x1FA99; / ~{estTime} min)
                 </>
               )}
             </button>
@@ -533,6 +550,83 @@ function GenerateVideoTab({ credits, setCredits }) {
           />
         </div>
       </div>
+
+      {/* Generation Overlay */}
+      {showOverlay && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+            className="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 px-8 py-10 max-w-sm w-full mx-4 text-center"
+          >
+            <button
+              onClick={() => setShowOverlay(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Animated spinner */}
+            <div className="relative w-24 h-24 mx-auto mb-6">
+              {/* Outer ring */}
+              <div className="absolute inset-0 rounded-full border-4 border-violet-200 dark:border-violet-900/50" />
+              {/* Spinning gradient ring */}
+              <svg className="absolute inset-0 w-24 h-24 animate-spin" style={{ animationDuration: '2.5s' }} viewBox="0 0 96 96">
+                <defs>
+                  <linearGradient id="spinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#8b5cf6" />
+                    <stop offset="50%" stopColor="#6366f1" />
+                    <stop offset="100%" stopColor="#a78bfa" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <circle cx="48" cy="48" r="44" fill="none" stroke="url(#spinGrad)" strokeWidth="4" strokeLinecap="round" strokeDasharray="200 80" />
+              </svg>
+              {/* Inner pulsing circle */}
+              <div className="absolute inset-3 rounded-full bg-gradient-to-br from-violet-500/20 to-indigo-500/20 animate-pulse flex items-center justify-center">
+                <Film className="w-8 h-8 text-violet-600 dark:text-violet-400" />
+              </div>
+              {/* Orbiting dots */}
+              <div className="absolute inset-0 animate-spin" style={{ animationDuration: '4s' }}>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-0.5 w-2.5 h-2.5 rounded-full bg-violet-500 shadow-lg shadow-violet-500/50" />
+              </div>
+              <div className="absolute inset-0 animate-spin" style={{ animationDuration: '6s', animationDirection: 'reverse' }}>
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-0.5 w-2 h-2 rounded-full bg-indigo-400 shadow-lg shadow-indigo-400/50" />
+              </div>
+            </div>
+
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">
+              Se generează videoclipul...
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
+              Modelele AI lucrează la crearea videoclipului tău.
+            </p>
+            <div className="inline-flex items-center gap-1.5 bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-800 rounded-xl px-4 py-2 mb-6">
+              <Clock className="w-4 h-4 text-violet-500" />
+              <span className="text-sm font-semibold text-violet-700 dark:text-violet-300">
+                Estimare: ~{overlayEstTime} min
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              <button
+                onClick={() => { setShowOverlay(false); onGoToGallery(); }}
+                className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl px-6 py-3 font-medium shadow-lg shadow-violet-500/25 transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <Film className="w-4 h-4" />
+                Mergi la Galerie
+              </button>
+              <button
+                onClick={() => setShowOverlay(false)}
+                className="w-full text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 py-2 transition-colors"
+              >
+                Continuă să generezi
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
