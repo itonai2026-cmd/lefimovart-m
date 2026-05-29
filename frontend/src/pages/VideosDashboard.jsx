@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Wand2, Film, Settings, ImageIcon, ChevronDown, Sparkles, Loader2, Clock, X } from 'lucide-react';
+import { Wand2, Film, Settings, ImageIcon, ChevronDown, Sparkles, Loader2, Clock, X, CheckCircle2, AlertCircle } from 'lucide-react';
+import AppLogo from '../components/AppLogo';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
@@ -29,9 +30,9 @@ const VIDEO_MODELS = {
       '1080p': { 4: 6, 6: 9, 8: 12, 10: 15 },
     },
   },
-  kling_25: {
-    name: 'Kling 2.5',
-    description: 'Top-tier cinematic quality with unparalleled motion fluidity and prompt precision.',
+  kling_3: {
+    name: 'Kling 3.0 Pro',
+    description: 'Latest Kling model with cinematic visuals, multi-shot storyboarding, and native audio. Best quality.',
     tier: 'high',
     aspect_ratios: ['16:9', '9:16', '1:1'],
     resolutions: ['720p', '1080p'],
@@ -68,8 +69,8 @@ const EST_TIME = {
                '1080p': { 4: '1.5-3', 6: '2-3.5', 8: '2.5-4', 10: '3-5' } },
   wan_27:    { '720p': { 4: '2-3',  6: '2.5-4', 8: '3-5',   10: '3.5-5' },
                '1080p': { 4: '2.5-4', 6: '3-5',   8: '4-6',   10: '4.5-7' } },
-  kling_25:  { '720p': { 4: '2-3',  6: '2-3',   8: '3-5',   10: '3-5' },
-               '1080p': { 4: '2.5-4', 6: '2.5-4', 8: '4-6',   10: '4-6' } },
+  kling_3:   { '720p': { 4: '1.5-3', 6: '2-3',   8: '2.5-4', 10: '3-5' },
+               '1080p': { 4: '2-3',   6: '2.5-4', 8: '3-5',   10: '3.5-6' } },
 };
 
 function getEstTime(modelKey, resolution, duration) {
@@ -185,6 +186,10 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery }) {
 
   const [showOverlay, setShowOverlay] = useState(false);
   const [overlayEstTime, setOverlayEstTime] = useState('');
+  const [overlayVideoId, setOverlayVideoId] = useState(null);
+  const [overlayStatus, setOverlayStatus] = useState('processing'); // 'processing' | 'completed' | 'failed'
+  const [overlayError, setOverlayError] = useState('');
+  const overlayPollRef = useRef(null);
   const currentModel = VIDEO_MODELS[model];
   const cost = getCost(model, resolution, parseInt(duration, 10));
   const estTime = getEstTime(model, resolution, parseInt(duration, 10));
@@ -284,6 +289,9 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery }) {
 
       setCredits(credits - cost);
       setOverlayEstTime(getEstTime(model, resolution, parseInt(duration, 10)));
+      setOverlayVideoId(data.video_id);
+      setOverlayStatus('processing');
+      setOverlayError('');
       setShowOverlay(true);
       setPrompt('');
       setReferenceImage(null);
@@ -293,6 +301,35 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery }) {
       setLoading(false);
     }
   };
+
+  // Poll overlay video status
+  useEffect(() => {
+    if (!showOverlay || !overlayVideoId || overlayStatus !== 'processing') {
+      if (overlayPollRef.current) { clearInterval(overlayPollRef.current); overlayPollRef.current = null; }
+      return;
+    }
+    const poll = async () => {
+      try {
+        const res = await fetch(`/wp/lefimovart/api/videos/status.php?id=${overlayVideoId}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const data = await res.json();
+        if (data.ok && data.video) {
+          if (data.video.status === 'completed') {
+            setOverlayStatus('completed');
+            toast.success('Your video is ready!');
+            setTimeout(() => { setShowOverlay(false); onGoToGallery(); }, 2500);
+          } else if (data.video.status === 'failed') {
+            setOverlayStatus('failed');
+            setOverlayError(data.video.error_message || 'Generation failed.');
+          }
+        }
+      } catch (_) { /* silent */ }
+    };
+    poll();
+    overlayPollRef.current = setInterval(poll, 10000);
+    return () => { if (overlayPollRef.current) { clearInterval(overlayPollRef.current); overlayPollRef.current = null; } };
+  }, [showOverlay, overlayVideoId, overlayStatus]);
 
   const handlePromptKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey && !loading && (prompt.trim() || referenceImage)) {
@@ -568,46 +605,82 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery }) {
               <X className="w-5 h-5" />
             </button>
 
-            {/* Animated spinner */}
+            {/* Animated spinner / status icon */}
             <div className="relative w-24 h-24 mx-auto mb-6">
-              {/* Outer ring */}
-              <div className="absolute inset-0 rounded-full border-4 border-violet-200 dark:border-violet-900/50" />
-              {/* Spinning gradient ring */}
-              <svg className="absolute inset-0 w-24 h-24 animate-spin" style={{ animationDuration: '2.5s' }} viewBox="0 0 96 96">
-                <defs>
-                  <linearGradient id="spinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#8b5cf6" />
-                    <stop offset="50%" stopColor="#6366f1" />
-                    <stop offset="100%" stopColor="#a78bfa" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <circle cx="48" cy="48" r="44" fill="none" stroke="url(#spinGrad)" strokeWidth="4" strokeLinecap="round" strokeDasharray="200 80" />
-              </svg>
-              {/* Inner pulsing circle */}
-              <div className="absolute inset-3 rounded-full bg-gradient-to-br from-violet-500/20 to-indigo-500/20 animate-pulse flex items-center justify-center">
-                <Film className="w-8 h-8 text-violet-600 dark:text-violet-400" />
-              </div>
-              {/* Orbiting dots */}
-              <div className="absolute inset-0 animate-spin" style={{ animationDuration: '4s' }}>
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-0.5 w-2.5 h-2.5 rounded-full bg-violet-500 shadow-lg shadow-violet-500/50" />
-              </div>
-              <div className="absolute inset-0 animate-spin" style={{ animationDuration: '6s', animationDirection: 'reverse' }}>
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-0.5 w-2 h-2 rounded-full bg-indigo-400 shadow-lg shadow-indigo-400/50" />
-              </div>
+              {overlayStatus === 'processing' && (
+                <>
+                  <div className="absolute inset-0 rounded-full border-4 border-violet-200 dark:border-violet-900/50" />
+                  <svg className="absolute inset-0 w-24 h-24 animate-spin" style={{ animationDuration: '2.5s' }} viewBox="0 0 96 96">
+                    <defs>
+                      <linearGradient id="spinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#8b5cf6" />
+                        <stop offset="50%" stopColor="#6366f1" />
+                        <stop offset="100%" stopColor="#a78bfa" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <circle cx="48" cy="48" r="44" fill="none" stroke="url(#spinGrad)" strokeWidth="4" strokeLinecap="round" strokeDasharray="200 80" />
+                  </svg>
+                  <div className="absolute inset-3 rounded-full bg-gradient-to-br from-violet-500/20 to-indigo-500/20 animate-pulse flex items-center justify-center">
+                    <AppLogo className="w-10 h-10 rounded-full" />
+                  </div>
+                  <div className="absolute inset-0 animate-spin" style={{ animationDuration: '4s' }}>
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-0.5 w-2.5 h-2.5 rounded-full bg-violet-500 shadow-lg shadow-violet-500/50" />
+                  </div>
+                  <div className="absolute inset-0 animate-spin" style={{ animationDuration: '6s', animationDirection: 'reverse' }}>
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-0.5 w-2 h-2 rounded-full bg-indigo-400 shadow-lg shadow-indigo-400/50" />
+                  </div>
+                </>
+              )}
+              {overlayStatus === 'completed' && (
+                <div className="w-24 h-24 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                  <CheckCircle2 className="w-12 h-12 text-emerald-500" />
+                </div>
+              )}
+              {overlayStatus === 'failed' && (
+                <div className="w-24 h-24 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                  <AlertCircle className="w-12 h-12 text-red-500" />
+                </div>
+              )}
             </div>
 
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">
-              Se generează videoclipul...
-            </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-              Modelele AI lucrează la crearea videoclipului tău.
-            </p>
-            <div className="inline-flex items-center gap-1.5 bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-800 rounded-xl px-4 py-2 mb-6">
-              <Clock className="w-4 h-4 text-violet-500" />
-              <span className="text-sm font-semibold text-violet-700 dark:text-violet-300">
-                Estimare: ~{overlayEstTime} min
-              </span>
-            </div>
+            {overlayStatus === 'processing' && (
+              <>
+                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">
+                  Generating your video...
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
+                  AI models are working on creating your video.
+                </p>
+                <div className="inline-flex items-center gap-1.5 bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-800 rounded-xl px-4 py-2 mb-6">
+                  <Clock className="w-4 h-4 text-violet-500" />
+                  <span className="text-sm font-semibold text-violet-700 dark:text-violet-300">
+                    Estimated: ~{overlayEstTime} min
+                  </span>
+                </div>
+              </>
+            )}
+
+            {overlayStatus === 'completed' && (
+              <>
+                <h3 className="text-lg font-bold text-emerald-700 dark:text-emerald-300 mb-2">
+                  Your video is ready!
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                  Redirecting to Gallery...
+                </p>
+              </>
+            )}
+
+            {overlayStatus === 'failed' && (
+              <>
+                <h3 className="text-lg font-bold text-red-600 dark:text-red-400 mb-2">
+                  Generation failed
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                  {overlayError || 'An error occurred while generating the video.'}
+                </p>
+              </>
+            )}
 
             <div className="space-y-2">
               <button
@@ -615,14 +688,24 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery }) {
                 className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl px-6 py-3 font-medium shadow-lg shadow-violet-500/25 transition-all duration-300 flex items-center justify-center gap-2"
               >
                 <Film className="w-4 h-4" />
-                Mergi la Galerie
+                Go to Gallery
               </button>
-              <button
-                onClick={() => setShowOverlay(false)}
-                className="w-full text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 py-2 transition-colors"
-              >
-                Continuă să generezi
-              </button>
+              {overlayStatus === 'processing' && (
+                <button
+                  onClick={() => setShowOverlay(false)}
+                  className="w-full text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 py-2 transition-colors"
+                >
+                  Continue generating
+                </button>
+              )}
+              {overlayStatus === 'failed' && (
+                <button
+                  onClick={() => setShowOverlay(false)}
+                  className="w-full text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 py-2 transition-colors"
+                >
+                  Close
+                </button>
+              )}
             </div>
           </motion.div>
         </div>
