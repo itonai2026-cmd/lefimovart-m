@@ -126,7 +126,7 @@ $MODELS_CONFIG = [
         'fps_default'      => null,
         'extra_params'     => [],
         'cost_table'       => [
-            'default' => [4 => 6, 6 => 6, 8 => 10, 10 => 10],
+            'default' => [4 => 6, 6 => 7, 8 => 9, 10 => 10],
         ],
     ],
 ];
