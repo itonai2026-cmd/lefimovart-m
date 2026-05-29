@@ -14,6 +14,7 @@ $prompt = trim($input['prompt'] ?? '');
 $model = $input['model'] ?? 'wan_27';
 $duration = intval($input['duration'] ?? 8);
 $aspect_ratio = $input['aspect_ratio'] ?? '16:9';
+$resolution = trim($input['resolution'] ?? '');
 $image_url = trim($input['image_url'] ?? '');
 
 global $MODELS_CONFIG, $pdo;
@@ -28,9 +29,20 @@ if (!in_array($aspect_ratio, $allowed_ratios)) {
     $aspect_ratio = '16:9';
 }
 
-$cost = $config['base_credit_cost'];
-$user = get_authenticated_user();
+// Resolve resolution — fall back to first available for this model
+$available_res = $config['resolutions'] ?? ['default'];
+if ($resolution === '' || !in_array($resolution, $available_res)) {
+    $resolution = $available_res[0];
+}
 
+// Look up dynamic credit cost from cost_table
+$cost_table = $config['cost_table'] ?? [];
+$cost = $cost_table[$resolution][$duration]
+     ?? $cost_table[$resolution][8]
+     ?? reset($cost_table)[$duration]
+     ?? 4;
+
+$user = get_authenticated_user();
 if (!$user || $user['credits'] < $cost) { json_response(['error' => 'Insufficient credits'], 400); }
 
 $is_i2v = ($image_url !== '');
@@ -49,8 +61,9 @@ if ($is_i2v) {
     $fal_payload['image_url'] = $image_url;
 }
 
-if (!empty($config['resolution'])) {
-    $fal_payload['resolution'] = $config['resolution'];
+// Send resolution to Fal.ai only when the model supports it (not 'default')
+if ($resolution !== 'default') {
+    $fal_payload['resolution'] = $resolution;
 }
 
 $fal_payload['aspect_ratio'] = $aspect_ratio;
@@ -94,7 +107,7 @@ $stmt->execute([
     $prompt,
     $is_i2v ? $image_url : null,
     $model,
-    $config['resolution'] ?? '1080p',
+    $resolution,
     $duration,
     'mp4',
     '',

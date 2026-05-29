@@ -74,6 +74,11 @@ define('FAL_AI_API_KEY', getenv('FAL_AI_API_KEY') ?: '');
 define('FAL_AI_BASE_URL', 'https://queue.fal.run');
 
 // ─── Video Models ─────────────────────────────────────────────────────────
+// cost_table: credits indexed by [resolution][duration_seconds]
+// Prices derived from Fal.ai per-second / per-video rates
+// LTX  T2V flat $0.04/video, I2V $0.04/sec
+// Wan   $0.10/sec @720p, $0.15/sec @1080p
+// Kling $0.35/5s, +$0.07/sec after
 $MODELS_CONFIG = [
     'ltx_video' => [
         'name'             => 'LTX Video 0.9.7',
@@ -81,13 +86,16 @@ $MODELS_CONFIG = [
         'tier'             => 'low',
         'api_endpoint'     => 'https://queue.fal.run/fal-ai/ltx-video-13b-distilled',
         'api_endpoint_i2v' => 'https://queue.fal.run/fal-ai/ltx-video-13b-distilled/image-to-video',
-        'base_credit_cost' => 4,
         'aspect_ratios'    => ['16:9', '9:16', '1:1'],
+        'resolutions'      => ['480p', '720p'],
         'duration_param'   => 'num_frames',
         'duration_map'     => [4 => 97, 6 => 145, 8 => 193, 10 => 241],
         'fps_default'      => 24,
-        'resolution'       => '720p',
         'extra_params'     => [],
+        'cost_table'       => [
+            '480p' => [4 => 1, 6 => 2, 8 => 2, 10 => 3],
+            '720p' => [4 => 2, 6 => 2, 8 => 3, 10 => 4],
+        ],
     ],
     'wan_27' => [
         'name'             => 'Wan 2.7',
@@ -95,13 +103,16 @@ $MODELS_CONFIG = [
         'tier'             => 'medium',
         'api_endpoint'     => 'https://queue.fal.run/fal-ai/wan/v2.7/text-to-video',
         'api_endpoint_i2v' => 'https://queue.fal.run/fal-ai/wan/v2.7/image-to-video',
-        'base_credit_cost' => 6,
         'aspect_ratios'    => ['16:9', '9:16', '1:1', '4:3', '3:4'],
+        'resolutions'      => ['720p', '1080p'],
         'duration_param'   => 'duration',
         'duration_map'     => [4 => 4, 6 => 6, 8 => 8, 10 => 10],
         'fps_default'      => null,
-        'resolution'       => '1080p',
         'extra_params'     => ['enable_prompt_expansion' => true],
+        'cost_table'       => [
+            '720p'  => [4 => 4, 6 => 6, 8 => 8, 10 => 10],
+            '1080p' => [4 => 6, 6 => 9, 8 => 12, 10 => 15],
+        ],
     ],
     'kling_25' => [
         'name'             => 'Kling 2.5 Pro',
@@ -109,13 +120,15 @@ $MODELS_CONFIG = [
         'tier'             => 'high',
         'api_endpoint'     => 'https://queue.fal.run/fal-ai/kling-video/v2.5-turbo/pro/text-to-video',
         'api_endpoint_i2v' => 'https://queue.fal.run/fal-ai/kling-video/v2.5-turbo/pro/image-to-video',
-        'base_credit_cost' => 10,
         'aspect_ratios'    => ['16:9', '9:16', '1:1'],
+        'resolutions'      => ['default'],
         'duration_param'   => 'duration',
         'duration_map'     => [4 => '5', 6 => '5', 8 => '10', 10 => '10'],
         'fps_default'      => null,
-        'resolution'       => null,
         'extra_params'     => [],
+        'cost_table'       => [
+            'default' => [4 => 6, 6 => 6, 8 => 10, 10 => 10],
+        ],
     ],
 ];
 
