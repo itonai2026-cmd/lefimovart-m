@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Wand2, Film, Settings, ImageIcon, ChevronDown, Sparkles, Loader2, Clock, X } from 'lucide-react';
+import AppLogo from '../components/AppLogo';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
@@ -583,9 +584,9 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery }) {
                 </defs>
                 <circle cx="48" cy="48" r="44" fill="none" stroke="url(#spinGrad)" strokeWidth="4" strokeLinecap="round" strokeDasharray="200 80" />
               </svg>
-              {/* Inner pulsing circle */}
+              {/* Inner pulsing circle with app logo */}
               <div className="absolute inset-3 rounded-full bg-gradient-to-br from-violet-500/20 to-indigo-500/20 animate-pulse flex items-center justify-center">
-                <Film className="w-8 h-8 text-violet-600 dark:text-violet-400" />
+                <AppLogo className="w-10 h-10 rounded-full" />
               </div>
               {/* Orbiting dots */}
               <div className="absolute inset-0 animate-spin" style={{ animationDuration: '4s' }}>
