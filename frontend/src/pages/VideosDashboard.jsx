@@ -30,9 +30,9 @@ const VIDEO_MODELS = {
       '1080p': { 4: 6, 6: 9, 8: 12, 10: 15 },
     },
   },
-  kling_25: {
-    name: 'Kling 2.5 Pro',
-    description: 'Top-tier cinematic quality with unparalleled motion fluidity and prompt precision.',
+  kling_3: {
+    name: 'Kling 3.0 Pro',
+    description: 'Latest Kling model with cinematic visuals, multi-shot storyboarding, and native audio. Best quality.',
     tier: 'high',
     aspect_ratios: ['16:9', '9:16', '1:1'],
     resolutions: ['720p', '1080p'],
@@ -69,8 +69,8 @@ const EST_TIME = {
                '1080p': { 4: '1.5-3', 6: '2-3.5', 8: '2.5-4', 10: '3-5' } },
   wan_27:    { '720p': { 4: '2-3',  6: '2.5-4', 8: '3-5',   10: '3.5-5' },
                '1080p': { 4: '2.5-4', 6: '3-5',   8: '4-6',   10: '4.5-7' } },
-  kling_25:  { '720p': { 4: '2-3',  6: '2-3',   8: '3-5',   10: '3-5' },
-               '1080p': { 4: '2.5-4', 6: '2.5-4', 8: '4-6',   10: '4-6' } },
+  kling_3:   { '720p': { 4: '1.5-3', 6: '2-3',   8: '2.5-4', 10: '3-5' },
+               '1080p': { 4: '2-3',   6: '2.5-4', 8: '3-5',   10: '3.5-6' } },
 };
 
 function getEstTime(modelKey, resolution, duration) {
