@@ -7,15 +7,14 @@ import { toast } from 'sonner';
 import { useAuth } from '../lib/AuthContext';
 
 const VIDEO_MODELS = {
-  ltx_video: {
-    name: 'LTX Video 0.9.7',
-    description: 'Fast & affordable open-source model. Good for quick drafts and iterations.',
+  kling_o3: {
+    name: 'Kling O3 Standard',
+    description: 'Latest Kling model with realistic motion and multi-shot support. Great value.',
     tier: 'low',
     aspect_ratios: ['16:9', '9:16', '1:1'],
-    resolutions: ['480p', '720p'],
+    resolutions: ['default'],
     cost_table: {
-      '480p': { 4: 1, 6: 2, 8: 2, 10: 3 },
-      '720p': { 4: 2, 6: 2, 8: 3, 10: 4 },
+      'default': { 4: 3, 6: 5, 8: 7, 10: 8 },
     },
   },
   wan_27: {
