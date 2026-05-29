@@ -10,29 +10,60 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') { json_response(['error' => 'Method n
 $payload = require_auth();
 $input = !empty($_POST) ? $_POST : (json_decode(file_get_contents('php://input'), true) ?: []);
 
-$prompt = $input['prompt'] ?? '';
-$model = $input['model'] ?? 'wan_fast';
+$prompt = trim($input['prompt'] ?? '');
+$model = $input['model'] ?? 'wan_27';
 $duration = intval($input['duration'] ?? 8);
+$aspect_ratio = $input['aspect_ratio'] ?? '16:9';
+$image_url = trim($input['image_url'] ?? '');
 
 global $MODELS_CONFIG, $pdo;
-if (trim($prompt) === '') { json_response(['error' => 'Prompt required'], 400); }
+if ($prompt === '' && $image_url === '') { json_response(['error' => 'Prompt or image required'], 400); }
 if (!isset($MODELS_CONFIG[$model])) { json_response(['error' => 'Invalid model'], 400); }
 if (FAL_AI_API_KEY === '') { json_response(['error' => 'FAL.ai video generation is not configured'], 500); }
 
 $config = $MODELS_CONFIG[$model];
+
+$allowed_ratios = $config['aspect_ratios'] ?? ['16:9', '9:16', '1:1'];
+if (!in_array($aspect_ratio, $allowed_ratios)) {
+    $aspect_ratio = '16:9';
+}
+
 $cost = $config['base_credit_cost'];
 $user = get_authenticated_user();
 
 if (!$user || $user['credits'] < $cost) { json_response(['error' => 'Insufficient credits'], 400); }
 
-// Call FAL.AI
-$fal_payload = [
-    'prompt' => $prompt,
-    $config['duration_param'] => $config['duration_map'][$duration] ?? 81,
-];
-if ($config['fps_default']) $fal_payload['fps'] = $config['fps_default'];
+$is_i2v = ($image_url !== '');
+$endpoint = $is_i2v ? $config['api_endpoint_i2v'] : $config['api_endpoint'];
 
-$ch = curl_init($config['api_endpoint']);
+$fal_payload = [];
+
+if ($prompt !== '') {
+    $fal_payload['prompt'] = $prompt;
+}
+
+$duration_value = $config['duration_map'][$duration] ?? $config['duration_map'][8] ?? 8;
+$fal_payload[$config['duration_param']] = $duration_value;
+
+if ($is_i2v) {
+    $fal_payload['image_url'] = $image_url;
+}
+
+if (!empty($config['resolution'])) {
+    $fal_payload['resolution'] = $config['resolution'];
+}
+
+$fal_payload['aspect_ratio'] = $aspect_ratio;
+
+if ($config['fps_default']) {
+    $fal_payload['frame_rate'] = $config['fps_default'];
+}
+
+if (!empty($config['extra_params'])) {
+    $fal_payload = array_merge($fal_payload, $config['extra_params']);
+}
+
+$ch = curl_init($endpoint);
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_POST => true,
@@ -53,17 +84,17 @@ if ($http_code < 200 || $http_code >= 300 || !$result || !isset($result['request
     json_response(['error' => $result['detail'] ?? ($curl_error ?: 'Video generation failed')], 502);
 }
 
-// Save to DB with status_url for polling
 $vid_dir = __DIR__ . '/../../vid';
 if (!is_dir($vid_dir)) mkdir($vid_dir, 0755, true);
 
-$stmt = $pdo->prepare('INSERT INTO videos (user_id, user_email, prompt, model_used, resolution, duration, format, video_url, credits_deducted, status, queue_id, status_url, response_url, api_endpoint) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+$stmt = $pdo->prepare('INSERT INTO videos (user_id, user_email, prompt, image_path, model_used, resolution, duration, format, video_url, credits_deducted, status, queue_id, status_url, response_url, api_endpoint) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 $stmt->execute([
     $user['id'],
     $user['email'],
     $prompt,
+    $is_i2v ? $image_url : null,
     $model,
-    '1080p',
+    $config['resolution'] ?? '1080p',
     $duration,
     'mp4',
     '',
@@ -72,11 +103,10 @@ $stmt->execute([
     $result['request_id'],
     $result['status_url'] ?? '',
     $result['response_url'] ?? '',
-    $config['api_endpoint']
+    $endpoint
 ]);
 $vid_id = $pdo->lastInsertId();
 
-// Deduct credits
 $upd = $pdo->prepare('UPDATE users SET credits = credits - ? WHERE id = ?');
 $upd->execute([$cost, $user['id']]);
 

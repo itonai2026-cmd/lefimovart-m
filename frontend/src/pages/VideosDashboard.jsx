@@ -1,9 +1,64 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Wand2, Film, Settings } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Wand2, Film, Settings, ImageIcon, ChevronDown, Sparkles, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/AuthContext';
+
+const VIDEO_MODELS = {
+  ltx_video: {
+    name: 'LTX Video 0.9.7',
+    description: 'Fast & affordable open-source model. Good for quick drafts and iterations.',
+    tier: 'low',
+    credit_cost: 4,
+    aspect_ratios: ['16:9', '9:16', '1:1'],
+  },
+  wan_27: {
+    name: 'Wan 2.7',
+    description: 'Enhanced motion smoothness and scene fidelity. Best quality-to-price ratio.',
+    tier: 'medium',
+    credit_cost: 6,
+    aspect_ratios: ['16:9', '9:16', '1:1', '4:3', '3:4'],
+  },
+  kling_25: {
+    name: 'Kling 2.5 Pro',
+    description: 'Top-tier cinematic quality with unparalleled motion fluidity and prompt precision.',
+    tier: 'high',
+    credit_cost: 10,
+    aspect_ratios: ['16:9', '9:16', '1:1'],
+  },
+};
+
+const TIER_COLORS = {
+  low: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700',
+  medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200 dark:border-amber-700',
+  high: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 border-rose-200 dark:border-rose-700',
+};
+
+const TIER_LABELS = { low: 'Budget', medium: 'Balanced', high: 'Premium' };
+
+const ARTISTIC_STYLES = [
+  { label: 'Photorealistic', suffix: 'photorealistic, fine details' },
+  { label: 'Oil Painting', suffix: 'oil painting, thick textures' },
+  { label: 'Watercolor', suffix: 'watercolor, transparent colors' },
+  { label: 'Anime / Manga', suffix: 'Japanese animation style' },
+  { label: 'Comic Book', suffix: 'comic book style' },
+  { label: 'Pixel Art', suffix: 'retro pixelated graphics' },
+];
+
+const LIGHTING_STYLES = [
+  { label: 'Cinematic', suffix: 'cinematic setting, dramatic lights' },
+  { label: 'Golden Hour', suffix: 'warm sunset light' },
+  { label: 'Neon / Cyberpunk', suffix: 'neon lights, futuristic' },
+];
+
+const TECHNICAL_STYLES = [
+  { label: '3D Render', suffix: 'photorealistic 3D rendering' },
+  { label: 'Isometric', suffix: 'isometric perspective' },
+  { label: 'Minimalist', suffix: 'simple, few elements' },
+  { label: 'Vintage / Retro', suffix: 'aged look, sepia' },
+];
 
 export default function VideosDashboard() {
   const navigate = useNavigate();
@@ -26,10 +81,11 @@ export default function VideosDashboard() {
   };
 
   return (
-    <Layout 
-      tabs={tabs} 
-      activeTab={activeTab} 
+    <Layout
+      tabs={tabs}
+      activeTab={activeTab}
       onTabChange={handleTabChange}
+      headerCredits={credits}
     >
       {activeTab === 'generate' && (
         <GenerateVideoTab credits={credits} setCredits={setCredits} />
@@ -41,25 +97,80 @@ export default function VideosDashboard() {
   );
 }
 
+function StyleDropdown({ title, options, value, onChange }) {
+  return (
+    <div className="flex-1 min-w-0">
+      <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+        {title}
+      </p>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={`w-full appearance-none text-sm font-medium rounded-xl px-3 py-2.5 pr-8 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all cursor-pointer ${
+            value
+              ? 'bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-300 dark:border-violet-600'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
+          }`}>
+          <option value="">None</option>
+          {options.map((opt) => (
+            <option key={opt.label} value={opt.suffix}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-slate-400" />
+      </div>
+    </div>
+  );
+}
+
 function GenerateVideoTab({ credits, setCredits }) {
   const { user } = useAuth();
   const [prompt, setPrompt] = useState('');
-  const [model, setModel] = useState('wan_fast');
+  const [model, setModel] = useState('wan_27');
   const [duration, setDuration] = useState('8');
+  const [aspectRatio, setAspectRatio] = useState('16:9');
   const [loading, setLoading] = useState(false);
+  const [referenceImage, setReferenceImage] = useState(null);
+  const [styleFilters, setStyleFilters] = useState({ artistic: '', lighting: '', technical: '' });
+  const fileInputRef = useRef(null);
 
-  const MODEL_COSTS = {
-    'wan_fast': 5,
-    'ltx_video': 4,
-    'kling_turbo': 8
+  const currentModel = VIDEO_MODELS[model];
+  const cost = currentModel?.credit_cost || 6;
+
+  const referenceImageUrl = useMemo(
+    () => (referenceImage ? URL.createObjectURL(referenceImage) : null),
+    [referenceImage]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (referenceImageUrl) URL.revokeObjectURL(referenceImageUrl);
+    };
+  }, [referenceImageUrl]);
+
+  useEffect(() => {
+    if (currentModel && !currentModel.aspect_ratios.includes(aspectRatio)) {
+      setAspectRatio(currentModel.aspect_ratios[0]);
+    }
+  }, [model]);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('Image too large. Maximum 20MB.');
+      return;
+    }
+    setReferenceImage(file);
   };
 
-  const cost = MODEL_COSTS[model] || 5;
-
   const handleGenerate = async (e) => {
-    e.preventDefault();
-    if (!prompt.trim()) {
-      toast.error('Please enter a prompt');
+    e?.preventDefault?.();
+    if (!prompt.trim() && !referenceImage) {
+      toast.error('Please enter a prompt or upload an image');
       return;
     }
 
@@ -68,12 +179,37 @@ function GenerateVideoTab({ credits, setCredits }) {
       return;
     }
 
+    const styleParts = [
+      styleFilters.artistic && `style ${styleFilters.artistic}`,
+      styleFilters.technical && `quality and technique ${styleFilters.technical}`,
+      styleFilters.lighting && `light and atmosphere ${styleFilters.lighting}`,
+    ].filter(Boolean);
+    const fullPrompt = styleParts.length && prompt.trim()
+      ? `${prompt}. Use the following: ${styleParts.join(', ')}.`
+      : prompt;
+
     setLoading(true);
     try {
+      let imageUrl = '';
+      if (referenceImage) {
+        const uploadData = new FormData();
+        uploadData.append('file', referenceImage);
+        const uploadRes = await fetch('/wp/lefimovart/api/requests/upload.php', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+          body: uploadData,
+        });
+        const uploaded = await uploadRes.json();
+        if (!uploaded.ok) throw new Error(uploaded.error || 'Image upload failed');
+        imageUrl = window.location.origin + uploaded.file_url;
+      }
+
       const requestData = new FormData();
-      requestData.append('prompt', prompt);
+      if (fullPrompt.trim()) requestData.append('prompt', fullPrompt);
       requestData.append('model', model);
       requestData.append('duration', String(parseInt(duration, 10)));
+      requestData.append('aspect_ratio', aspectRatio);
+      if (imageUrl) requestData.append('image_url', imageUrl);
 
       const res = await fetch('/wp/lefimovart/api/videos/create.php', {
         method: 'POST',
@@ -92,6 +228,7 @@ function GenerateVideoTab({ credits, setCredits }) {
       toast.success('Video generation started! Check your videos list for status.');
       setCredits(credits - cost);
       setPrompt('');
+      setReferenceImage(null);
     } catch (e) {
       toast.error(e.message);
     } finally {
@@ -99,57 +236,232 @@ function GenerateVideoTab({ credits, setCredits }) {
     }
   };
 
-  return (
-    <div className="relative z-10 px-4 py-6 max-w-2xl mx-auto">
-      <div className="bg-card rounded-2xl shadow-lg shadow-black/10 p-8 border border-border">
-        <h2 className="text-2xl font-bold mb-6 text-foreground">Generate Video with AI</h2>
+  const handlePromptKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && !loading && (prompt.trim() || referenceImage)) {
+      e.preventDefault();
+      handleGenerate();
+    }
+  };
 
-        <form onSubmit={handleGenerate} className="space-y-4">
-          <div>
-            <label className="block text-sm font-semibold mb-2 text-foreground">Your Prompt</label>
+  return (
+    <div className="relative z-10 px-4 py-6 max-w-2xl mx-auto space-y-3">
+      {/* Prompt Input */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-full"
+      >
+        <div className="bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-black/30 rounded-2xl overflow-hidden">
+          <div className="m-3 rounded-xl overflow-hidden">
             <textarea
+              placeholder={referenceImage
+                ? 'Describe the motion or transformation for this image...'
+                : 'Describe the video you want to generate...'}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Describe the video you want to generate..."
-              className="w-full h-32 px-4 py-2 bg-muted border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              onKeyDown={handlePromptKeyDown}
+              rows={4}
+              style={{ resize: 'none', outline: 'none' }}
+              className="w-full bg-slate-50 dark:bg-slate-950 text-base text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 border border-transparent focus:border-slate-300 dark:focus:border-slate-600 rounded-xl p-4 transition-colors"
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-semibold mb-2 text-foreground">AI Model</label>
-            <select
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              className="w-full px-4 py-2 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          <div className="flex items-center justify-between px-4 pb-3">
+            <div className="text-sm text-slate-400 dark:text-slate-500">
+              <span className="text-xs block">
+                {referenceImage ? 'Image-to-Video mode' : 'Text-to-Video mode'}
+              </span>
+              <span className="text-xs block">Enter &rarr; Generate</span>
+            </div>
+            <button
+              onClick={handleGenerate}
+              disabled={loading || (!prompt.trim() && !referenceImage) || credits < cost}
+              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl px-6 min-h-[44px] font-medium shadow-lg shadow-violet-500/25 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              <option value="wan_fast">Wan 2.1 Fast (5 🪙)</option>
-              <option value="ltx_video">LTX Video (4 🪙)</option>
-              <option value="kling_turbo">Kling 1.6 (8 🪙)</option>
-            </select>
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  Generate ({cost} &#x1FA99;)
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Settings Panel */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 px-5 py-4">
+        <div className="flex flex-wrap gap-5 items-center justify-evenly">
+          {/* Reference Image */}
+          <div className="flex flex-col gap-1.5 items-center">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">
+              {referenceImage ? 'DEL' : 'IMG'}
+            </span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            <button
+              type="button"
+              onClick={() => referenceImage ? setReferenceImage(null) : fileInputRef.current?.click()}
+              aria-label={referenceImage ? 'Remove reference image' : 'Upload reference image'}
+              className={`rounded-lg min-h-[44px] min-w-[44px] transition-all border-2 overflow-hidden ${
+                referenceImage
+                  ? 'border-violet-500 dark:border-violet-400'
+                  : 'border-dashed border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200'
+              }`}
+            >
+              {referenceImageUrl ? (
+                <img src={referenceImageUrl} alt="Reference" className="w-11 h-11 object-cover" />
+              ) : (
+                <ImageIcon className="w-5 h-5 text-slate-500 m-2.5" />
+              )}
+            </button>
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold mb-2 text-foreground">Duration (seconds)</label>
-            <select
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              className="w-full px-4 py-2 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="4">4 seconds</option>
-              <option value="6">6 seconds</option>
-              <option value="8">8 seconds</option>
-              <option value="10">10 seconds</option>
-            </select>
+          {/* Duration */}
+          <div className="flex flex-col gap-1.5 items-center">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">Duration</span>
+            <div className="grid grid-cols-4 gap-1.5">
+              {['4', '6', '8', '10'].map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setDuration(d)}
+                  className={`min-h-[36px] min-w-[36px] rounded-xl border text-sm font-bold transition-all ${
+                    duration === d
+                      ? 'border-violet-500 bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300'
+                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                  }`}
+                >
+                  {d}s
+                </button>
+              ))}
+            </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading || !prompt.trim() || credits < cost}
-            className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
-          >
-            {loading ? 'Generating...' : `Generate Video (${cost} 🪙)`}
-          </button>
-        </form>
+          {/* Cost */}
+          <div className="flex flex-col gap-1.5 items-center">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">Cost</span>
+            <div className="flex items-center gap-1.5 bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-800 rounded-xl px-3 py-1.5">
+              <span className="text-sm font-bold text-violet-700 dark:text-violet-300">{cost}</span>
+              <span className="text-base leading-none" aria-hidden>&#x1FA99;</span>
+            </div>
+          </div>
+
+          {/* Credits */}
+          <div className="flex flex-col gap-1.5 items-center">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">Credits</span>
+            <div className="flex items-center gap-1.5 bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-800 rounded-xl px-3 py-1.5">
+              <span className="text-sm font-bold text-violet-700 dark:text-violet-300">{credits}</span>
+              <span className="text-base leading-none" aria-hidden>&#x1FA99;</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Model Selector */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 px-5 py-4">
+        <p className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-3 text-center">
+          AI Video Model
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {Object.entries(VIDEO_MODELS).map(([key, m]) => {
+            const active = model === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setModel(key)}
+                aria-pressed={active}
+                className={`rounded-xl border px-3 py-3 text-left transition-all ${
+                  active
+                    ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30 ring-1 ring-violet-500'
+                    : 'border-slate-200 bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className={`text-sm font-bold ${active ? 'text-violet-700 dark:text-violet-300' : 'text-slate-700 dark:text-slate-200'}`}>
+                    {m.name}
+                  </span>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${TIER_COLORS[m.tier]}`}>
+                    {TIER_LABELS[m.tier]}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mb-1.5">
+                  {m.description}
+                </p>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-bold text-violet-600 dark:text-violet-400">{m.credit_cost}</span>
+                  <span className="text-xs">&#x1FA99;</span>
+                  <span className="text-[10px] text-slate-400">/ video</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Format / Aspect Ratio Selector */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 px-5 py-4">
+        <p className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-3 text-center">
+          Video Format
+        </p>
+        <div className="flex flex-wrap gap-2 justify-center">
+          {(currentModel?.aspect_ratios || ['16:9', '9:16', '1:1']).map((ratio) => {
+            const active = aspectRatio === ratio;
+            return (
+              <button
+                key={ratio}
+                type="button"
+                onClick={() => setAspectRatio(ratio)}
+                aria-pressed={active}
+                className={`min-h-[48px] min-w-[64px] rounded-xl border px-4 py-2 text-center transition-all ${
+                  active
+                    ? 'border-violet-500 bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300'
+                    : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                }`}
+              >
+                <span className="block text-sm font-bold">{ratio}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Style Selector */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 px-5 py-4">
+        <p className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-3 text-center">
+          Video Style
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <StyleDropdown
+            title="Artistic"
+            options={ARTISTIC_STYLES}
+            value={styleFilters.artistic}
+            onChange={(v) => setStyleFilters({ ...styleFilters, artistic: v })}
+          />
+          <StyleDropdown
+            title="Lighting"
+            options={LIGHTING_STYLES}
+            value={styleFilters.lighting}
+            onChange={(v) => setStyleFilters({ ...styleFilters, lighting: v })}
+          />
+          <StyleDropdown
+            title="Technical"
+            options={TECHNICAL_STYLES}
+            value={styleFilters.technical}
+            onChange={(v) => setStyleFilters({ ...styleFilters, technical: v })}
+          />
+        </div>
       </div>
     </div>
   );
@@ -217,6 +529,8 @@ function VideoGalleryTab() {
     }
   };
 
+  const modelDisplayName = (key) => VIDEO_MODELS[key]?.name || key;
+
   return (
     <div className="relative z-10 px-4 py-6">
       {loading ? (
@@ -243,7 +557,7 @@ function VideoGalleryTab() {
                       src={video.video_url}
                     />
                     <span className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                      ✓ Ready
+                      Ready
                     </span>
                   </>
                 ) : video.status === 'failed' ? (
@@ -265,7 +579,7 @@ function VideoGalleryTab() {
                   {video.prompt}
                 </p>
                 <p className="text-xs mt-2 text-muted-foreground">
-                  Model: {video.model_used}
+                  Model: {modelDisplayName(video.model_used)}
                 </p>
                 <p className="text-xs mt-1 text-muted-foreground">
                   Status: <span className="font-semibold capitalize">{video.status}</span>
