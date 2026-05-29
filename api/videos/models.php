@@ -14,8 +14,9 @@ foreach ($MODELS_CONFIG as $key => $cfg) {
         'name'          => $cfg['name'],
         'description'   => $cfg['description'] ?? '',
         'tier'          => $cfg['tier'] ?? 'medium',
-        'credit_cost'   => $cfg['base_credit_cost'],
+        'resolutions'   => $cfg['resolutions'] ?? ['default'],
         'aspect_ratios' => $cfg['aspect_ratios'] ?? ['16:9', '9:16', '1:1'],
+        'cost_table'    => $cfg['cost_table'] ?? [],
     ];
 }
 

@@ -7,28 +7,59 @@ import { toast } from 'sonner';
 import { useAuth } from '../lib/AuthContext';
 
 const VIDEO_MODELS = {
-  ltx_video: {
-    name: 'LTX Video 0.9.7',
-    description: 'Fast & affordable open-source model. Good for quick drafts and iterations.',
+  kling_o3: {
+    name: 'Kling O3 Standard',
+    description: 'Latest Kling model with realistic motion and multi-shot support. Great value.',
     tier: 'low',
-    credit_cost: 4,
     aspect_ratios: ['16:9', '9:16', '1:1'],
+    resolutions: ['default'],
+    cost_table: {
+      'default': { 4: 3, 6: 5, 8: 7, 10: 8 },
+    },
   },
   wan_27: {
     name: 'Wan 2.7',
     description: 'Enhanced motion smoothness and scene fidelity. Best quality-to-price ratio.',
     tier: 'medium',
-    credit_cost: 6,
     aspect_ratios: ['16:9', '9:16', '1:1', '4:3', '3:4'],
+    resolutions: ['720p', '1080p'],
+    cost_table: {
+      '720p':  { 4: 4, 6: 6, 8: 8, 10: 10 },
+      '1080p': { 4: 6, 6: 9, 8: 12, 10: 15 },
+    },
   },
   kling_25: {
     name: 'Kling 2.5 Pro',
     description: 'Top-tier cinematic quality with unparalleled motion fluidity and prompt precision.',
     tier: 'high',
-    credit_cost: 10,
     aspect_ratios: ['16:9', '9:16', '1:1'],
+    resolutions: ['default'],
+    cost_table: {
+      'default': { 4: 6, 6: 6, 8: 10, 10: 10 },
+    },
   },
 };
+
+function getCost(modelKey, resolution, duration) {
+  const m = VIDEO_MODELS[modelKey];
+  if (!m) return 0;
+  const table = m.cost_table[resolution] || Object.values(m.cost_table)[0] || {};
+  return table[duration] ?? table[8] ?? 0;
+}
+
+function getMinCost(modelKey) {
+  const m = VIDEO_MODELS[modelKey];
+  if (!m) return 0;
+  let min = Infinity;
+  for (const res of Object.values(m.cost_table)) {
+    for (const c of Object.values(res)) {
+      if (c < min) min = c;
+    }
+  }
+  return min === Infinity ? 0 : min;
+}
+
+const RES_LABELS = { '480p': '480p SD', '720p': '720p HD', '1080p': '1080p FHD' };
 
 const TIER_COLORS = {
   low: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700',
@@ -130,6 +161,7 @@ function GenerateVideoTab({ credits, setCredits }) {
   const [prompt, setPrompt] = useState('');
   const [model, setModel] = useState('wan_27');
   const [duration, setDuration] = useState('8');
+  const [resolution, setResolution] = useState('720p');
   const [aspectRatio, setAspectRatio] = useState('16:9');
   const [loading, setLoading] = useState(false);
   const [referenceImage, setReferenceImage] = useState(null);
@@ -137,7 +169,7 @@ function GenerateVideoTab({ credits, setCredits }) {
   const fileInputRef = useRef(null);
 
   const currentModel = VIDEO_MODELS[model];
-  const cost = currentModel?.credit_cost || 6;
+  const cost = getCost(model, resolution, parseInt(duration, 10));
 
   const referenceImageUrl = useMemo(
     () => (referenceImage ? URL.createObjectURL(referenceImage) : null),
@@ -151,8 +183,14 @@ function GenerateVideoTab({ credits, setCredits }) {
   }, [referenceImageUrl]);
 
   useEffect(() => {
-    if (currentModel && !currentModel.aspect_ratios.includes(aspectRatio)) {
-      setAspectRatio(currentModel.aspect_ratios[0]);
+    if (currentModel) {
+      if (!currentModel.aspect_ratios.includes(aspectRatio)) {
+        setAspectRatio(currentModel.aspect_ratios[0]);
+      }
+      const avail = currentModel.resolutions || ['default'];
+      if (!avail.includes(resolution)) {
+        setResolution(avail[0]);
+      }
     }
   }, [model]);
 
@@ -209,6 +247,7 @@ function GenerateVideoTab({ credits, setCredits }) {
       requestData.append('model', model);
       requestData.append('duration', String(parseInt(duration, 10)));
       requestData.append('aspect_ratio', aspectRatio);
+      requestData.append('resolution', resolution);
       if (imageUrl) requestData.append('image_url', imageUrl);
 
       const res = await fetch('/wp/lefimovart/api/videos/create.php', {
@@ -400,15 +439,44 @@ function GenerateVideoTab({ credits, setCredits }) {
                   {m.description}
                 </p>
                 <div className="flex items-center gap-1">
-                  <span className="text-xs font-bold text-violet-600 dark:text-violet-400">{m.credit_cost}</span>
+                  <span className="text-[10px] text-slate-400">from</span>
+                  <span className="text-xs font-bold text-violet-600 dark:text-violet-400">{getMinCost(key)}</span>
                   <span className="text-xs">&#x1FA99;</span>
-                  <span className="text-[10px] text-slate-400">/ video</span>
                 </div>
               </button>
             );
           })}
         </div>
       </div>
+
+      {/* Resolution Selector */}
+      {currentModel && currentModel.resolutions[0] !== 'default' && (
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 px-5 py-4">
+          <p className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-3 text-center">
+            Resolution
+          </p>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {currentModel.resolutions.map((res) => {
+              const active = resolution === res;
+              return (
+                <button
+                  key={res}
+                  type="button"
+                  onClick={() => setResolution(res)}
+                  aria-pressed={active}
+                  className={`min-h-[48px] min-w-[80px] rounded-xl border px-4 py-2 text-center transition-all ${
+                    active
+                      ? 'border-violet-500 bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300'
+                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                  }`}
+                >
+                  <span className="block text-sm font-bold">{RES_LABELS[res] || res}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Format / Aspect Ratio Selector */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 px-5 py-4">
