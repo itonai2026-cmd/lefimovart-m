@@ -13,6 +13,7 @@ const VIDEO_MODELS = {
     tier: 'low',
     aspect_ratios: ['16:9', '9:16', '1:1'],
     resolutions: ['default'],
+    fixed_resolution: '1080p FHD',
     cost_table: {
       'default': { 4: 3, 6: 5, 8: 7, 10: 8 },
     },
@@ -34,6 +35,7 @@ const VIDEO_MODELS = {
     tier: 'high',
     aspect_ratios: ['16:9', '9:16', '1:1'],
     resolutions: ['default'],
+    fixed_resolution: '1080p FHD',
     cost_table: {
       'default': { 4: 6, 6: 8, 8: 10, 10: 12 },
     },
@@ -449,8 +451,8 @@ function GenerateVideoTab({ credits, setCredits }) {
         </div>
       </div>
 
-      {/* Resolution Selector */}
-      {currentModel && currentModel.resolutions[0] !== 'default' && (
+      {/* Resolution Selector / Fixed Resolution Info */}
+      {currentModel && currentModel.resolutions[0] !== 'default' ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 px-5 py-4">
           <p className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-3 text-center">
             Resolution
@@ -476,7 +478,19 @@ function GenerateVideoTab({ credits, setCredits }) {
             })}
           </div>
         </div>
-      )}
+      ) : currentModel?.fixed_resolution ? (
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 px-5 py-4">
+          <p className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-3 text-center">
+            Resolution
+          </p>
+          <div className="flex justify-center">
+            <div className="min-h-[48px] min-w-[80px] rounded-xl border border-violet-500 bg-violet-50 dark:bg-violet-900/30 px-4 py-2 text-center">
+              <span className="block text-sm font-bold text-violet-700 dark:text-violet-300">{currentModel.fixed_resolution}</span>
+              <span className="block text-[10px] text-slate-400">fixed</span>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* Format / Aspect Ratio Selector */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 px-5 py-4">
