@@ -8,13 +8,14 @@ import { useAuth } from '../lib/AuthContext';
 
 const VIDEO_MODELS = {
   kling_o3: {
-    name: 'Kling O3 Standard',
+    name: 'Kling O3',
     description: 'Latest Kling model with realistic motion and multi-shot support. Great value.',
     tier: 'low',
     aspect_ratios: ['16:9', '9:16', '1:1'],
-    resolutions: ['default'],
+    resolutions: ['720p', '1080p'],
     cost_table: {
-      'default': { 4: 3, 6: 5, 8: 7, 10: 8 },
+      '720p':  { 4: 3, 6: 5, 8: 7, 10: 8 },
+      '1080p': { 4: 4, 6: 7, 8: 9, 10: 11 },
     },
   },
   wan_27: {
@@ -29,13 +30,14 @@ const VIDEO_MODELS = {
     },
   },
   kling_25: {
-    name: 'Kling 2.5 Pro',
+    name: 'Kling 2.5',
     description: 'Top-tier cinematic quality with unparalleled motion fluidity and prompt precision.',
     tier: 'high',
     aspect_ratios: ['16:9', '9:16', '1:1'],
-    resolutions: ['default'],
+    resolutions: ['720p', '1080p'],
     cost_table: {
-      'default': { 4: 6, 6: 6, 8: 10, 10: 10 },
+      '720p':  { 4: 3, 6: 5, 8: 7, 10: 8 },
+      '1080p': { 4: 6, 6: 8, 8: 10, 10: 12 },
     },
   },
 };
@@ -450,7 +452,7 @@ function GenerateVideoTab({ credits, setCredits }) {
       </div>
 
       {/* Resolution Selector */}
-      {currentModel && currentModel.resolutions[0] !== 'default' && (
+      {currentModel && (
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 px-5 py-4">
           <p className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-3 text-center">
             Resolution
