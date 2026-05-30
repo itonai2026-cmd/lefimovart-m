@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Wand2, Film, Settings, ImageIcon, ChevronDown, ChevronLeft, ChevronRight, Sparkles, Loader2, Clock, X, CheckCircle2, AlertCircle, Trash2 } from 'lucide-react';
-import AppLogo from '../components/AppLogo';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
@@ -367,6 +366,7 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery, initialRefImage,
 
   return (
     <div className="relative z-10 px-4 py-6 max-w-2xl mx-auto space-y-3">
+      <img src="/wp/lefimovart/lefi-video-logo.png" alt="Video Generation" className="w-24 h-24 sm:w-28 sm:h-28 mb-3 object-contain mx-auto" />
       {/* Prompt Input */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -651,7 +651,7 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery, initialRefImage,
                     <circle cx="48" cy="48" r="44" fill="none" stroke="url(#spinGrad)" strokeWidth="4" strokeLinecap="round" strokeDasharray="200 80" />
                   </svg>
                   <div className="absolute inset-3 rounded-full bg-gradient-to-br from-violet-500/20 to-indigo-500/20 animate-pulse flex items-center justify-center">
-                    <AppLogo className="w-10 h-10 rounded-full" />
+                    <img src="/wp/lefimovart/lefi-video-logo.png" alt="Video Generation" className="w-10 h-10 rounded-full object-contain" />
                   </div>
                   <div className="absolute inset-0 animate-spin" style={{ animationDuration: '4s' }}>
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-0.5 w-2.5 h-2.5 rounded-full bg-violet-500 shadow-lg shadow-violet-500/50" />

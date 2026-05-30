@@ -8,8 +8,6 @@ import ImageSettings, { getCost } from '../components/ImageSettings';
 import StyleSelector from '../components/StyleSelector';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/AuthContext';
-import AppLogo from '../components/AppLogo';
-
 import GalleryPage from './Gallery';
 
 export default function ImagesDashboard() {
@@ -154,7 +152,7 @@ function GenerateImageTab({ credits, setCredits }) {
   return (
     <div className="min-h-full bg-background dark:bg-slate-950" role="region" aria-label="Image generation">
       <div className="relative z-10 px-4 py-4 sm:py-10">
-        <AppLogo className="w-24 h-24 sm:w-28 sm:h-28 mb-3" />
+        <img src="/wp/lefimovart/lefi-image-logo.png" alt="Image Generation" className="w-24 h-24 sm:w-28 sm:h-28 mb-3 object-contain mx-auto" />
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
