@@ -93,8 +93,8 @@ foreach ($videos as $v) {
     }
 
     $local_url = BASE_PATH . '/vid/' . $filename;
-    $upd = $pdo->prepare('UPDATE videos SET video_url = ? WHERE id = ?');
-    $upd->execute([$local_url, $v['id']]);
+    $upd = $pdo->prepare('UPDATE videos SET video_url = ?, original_url = ? WHERE id = ?');
+    $upd->execute([$local_url, $url, $v['id']]);
 
     $size_mb = round(strlen($bytes) / 1024 / 1024, 2);
     echo "<p class='ok'>&nbsp;&nbsp;[OK] Saved: $filename ($size_mb MB)</p>";
