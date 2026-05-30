@@ -32,10 +32,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
     $url = $video['video_url'] ?? '';
     if ($url !== '') {
         $localPath = '';
+        $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
+        $repoRoot = realpath(__DIR__ . '/../..');
+
         if (strpos($url, '/') === 0 && !preg_match('#^https?://#', $url)) {
-            $localPath = $_SERVER['DOCUMENT_ROOT'] . $url;
+            // Relative path like /wp/lefimovart/vid/video_1.mp4
+            if ($docRoot !== '') {
+                $localPath = $docRoot . $url;
+            }
+            // Fallback: resolve via BASE_PATH prefix
+            if (($localPath === '' || !is_file($localPath)) && strpos($url, BASE_PATH) === 0) {
+                $relative = substr($url, strlen(BASE_PATH));
+                $localPath = $repoRoot . $relative;
+            }
         } elseif (preg_match('#^https?://[^/]+(/wp/lefimovart/.+)$#', $url, $m)) {
-            $localPath = $_SERVER['DOCUMENT_ROOT'] . $m[1];
+            if ($docRoot !== '') {
+                $localPath = $docRoot . $m[1];
+            }
+            if (($localPath === '' || !is_file($localPath)) && strpos($m[1], BASE_PATH) === 0) {
+                $relative = substr($m[1], strlen(BASE_PATH));
+                $localPath = $repoRoot . $relative;
+            }
         }
         if ($localPath !== '' && is_file($localPath)) {
             @unlink($localPath);

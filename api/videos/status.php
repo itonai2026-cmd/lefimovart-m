@@ -77,10 +77,35 @@ if (isset($fal_status['status']) && $fal_status['status'] === 'COMPLETED') {
     $video_url = $result['video']['url'] ?? '';
 
     if ($video_url) {
+        $local_url = $video_url;
+
+        // Download video to local vid/ directory
+        $vid_dir = __DIR__ . '/../../vid';
+        if (!is_dir($vid_dir)) mkdir($vid_dir, 0755, true);
+
+        $filename = 'video_' . $video['id'] . '_' . time() . '.mp4';
+        $filepath = $vid_dir . '/' . $filename;
+
+        $dlch = curl_init($video_url);
+        curl_setopt_array($dlch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT        => 300,
+        ]);
+        $video_bytes = curl_exec($dlch);
+        $dl_http = curl_getinfo($dlch, CURLINFO_HTTP_CODE);
+        curl_close($dlch);
+
+        if ($dl_http >= 200 && $dl_http < 300 && $video_bytes !== false && strlen($video_bytes) > 0) {
+            if (file_put_contents($filepath, $video_bytes) !== false) {
+                $local_url = BASE_PATH . '/vid/' . $filename;
+            }
+        }
+
         $upd = $pdo->prepare('UPDATE videos SET status = ?, video_url = ?, completed_at = NOW() WHERE id = ?');
-        $upd->execute(['completed', $video_url, $video['id']]);
+        $upd->execute(['completed', $local_url, $video['id']]);
         $video['status'] = 'completed';
-        $video['video_url'] = $video_url;
+        $video['video_url'] = $local_url;
     }
 } elseif (isset($fal_status['status']) && $fal_status['status'] === 'FAILED') {
     $error = $fal_status['error'] ?? 'Unknown error';
