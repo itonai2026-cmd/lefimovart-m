@@ -90,10 +90,7 @@ export default function SettingsPage() {
           className="bg-white mb-6 px-4 py-4 rounded-2xl dark:bg-slate-900 shadow-lg shadow-violet-500/10 border border-slate-100 dark:border-slate-800 flex items-center gap-4"
         >
           <AppLogo className="w-14 h-14 rounded-xl" />
-          <div>
-            <p className="text-xl font-bold text-slate-900 dark:text-white tracking-widest">LEFI</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">LefiMovArt</p>
-          </div>
+          <p className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">LefiMovArt</p>
           <div className="ml-auto text-right">
             <p className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">ITonAI</p>
             <p className="text-xs text-slate-500 dark:text-slate-400">lefi.itonai.ro</p>
