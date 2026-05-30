@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Wand2, Film, Settings, ImageIcon, ChevronDown, Sparkles, Loader2, Clock, X, CheckCircle2, AlertCircle } from 'lucide-react';
 import AppLogo from '../components/AppLogo';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
 import { toast } from 'sonner';
@@ -109,9 +109,11 @@ const TECHNICAL_STYLES = [
 
 export default function VideosDashboard() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('generate');
   const [credits, setCredits] = useState(user?.credits || 0);
+  const initialRefImage = searchParams.get('ref_image') || '';
 
   const tabs = [
     { id: 'generate', label: 'Generate', icon: Wand2 },
@@ -135,7 +137,7 @@ export default function VideosDashboard() {
       headerCredits={credits}
     >
       {activeTab === 'generate' && (
-        <GenerateVideoTab credits={credits} setCredits={setCredits} onGoToGallery={() => setActiveTab('videos')} />
+        <GenerateVideoTab credits={credits} setCredits={setCredits} onGoToGallery={() => setActiveTab('videos')} initialRefImage={initialRefImage} onClearRefParam={() => setSearchParams({}, { replace: true })} />
       )}
       {activeTab === 'videos' && (
         <VideoGalleryTab />
@@ -172,7 +174,7 @@ function StyleDropdown({ title, options, value, onChange }) {
   );
 }
 
-function GenerateVideoTab({ credits, setCredits, onGoToGallery }) {
+function GenerateVideoTab({ credits, setCredits, onGoToGallery, initialRefImage, onClearRefParam }) {
   const { user } = useAuth();
   const [prompt, setPrompt] = useState('');
   const [model, setModel] = useState('wan_27');
@@ -181,8 +183,16 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery }) {
   const [aspectRatio, setAspectRatio] = useState('16:9');
   const [loading, setLoading] = useState(false);
   const [referenceImage, setReferenceImage] = useState(null);
+  const [preloadedImageUrl, setPreloadedImageUrl] = useState(initialRefImage || '');
   const [styleFilters, setStyleFilters] = useState({ artistic: '', lighting: '', technical: '' });
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (initialRefImage) {
+      setPreloadedImageUrl(initialRefImage);
+      onClearRefParam?.();
+    }
+  }, [initialRefImage]);
 
   const [showOverlay, setShowOverlay] = useState(false);
   const [overlayEstTime, setOverlayEstTime] = useState('');
@@ -195,9 +205,11 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery }) {
   const estTime = getEstTime(model, resolution, parseInt(duration, 10));
 
   const referenceImageUrl = useMemo(
-    () => (referenceImage ? URL.createObjectURL(referenceImage) : null),
-    [referenceImage]
+    () => (referenceImage ? URL.createObjectURL(referenceImage) : preloadedImageUrl || null),
+    [referenceImage, preloadedImageUrl]
   );
+
+  const hasReference = !!(referenceImage || preloadedImageUrl);
 
   useEffect(() => {
     return () => {
@@ -230,7 +242,7 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery }) {
 
   const handleGenerate = async (e) => {
     e?.preventDefault?.();
-    if (!prompt.trim() && !referenceImage) {
+    if (!prompt.trim() && !hasReference) {
       toast.error('Please enter a prompt or upload an image');
       return;
     }
@@ -263,6 +275,8 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery }) {
         const uploaded = await uploadRes.json();
         if (!uploaded.ok) throw new Error(uploaded.error || 'Image upload failed');
         imageUrl = window.location.origin + uploaded.file_url;
+      } else if (preloadedImageUrl) {
+        imageUrl = preloadedImageUrl.startsWith('http') ? preloadedImageUrl : window.location.origin + preloadedImageUrl;
       }
 
       const requestData = new FormData();
@@ -295,6 +309,7 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery }) {
       setShowOverlay(true);
       setPrompt('');
       setReferenceImage(null);
+      setPreloadedImageUrl('');
     } catch (e) {
       toast.error(e.message);
     } finally {
@@ -332,7 +347,7 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery }) {
   }, [showOverlay, overlayVideoId, overlayStatus]);
 
   const handlePromptKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey && !loading && (prompt.trim() || referenceImage)) {
+    if (e.key === 'Enter' && !e.shiftKey && !loading && (prompt.trim() || hasReference)) {
       e.preventDefault();
       handleGenerate();
     }
@@ -350,7 +365,7 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery }) {
         <div className="bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-black/30 rounded-2xl overflow-hidden">
           <div className="m-3 rounded-xl overflow-hidden">
             <textarea
-              placeholder={referenceImage
+              placeholder={hasReference
                 ? 'Describe the motion or transformation for this image...'
                 : 'Describe the video you want to generate...'}
               value={prompt}
@@ -364,13 +379,13 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery }) {
           <div className="flex items-center justify-between px-4 pb-3">
             <div className="text-sm text-slate-400 dark:text-slate-500">
               <span className="text-xs block">
-                {referenceImage ? 'Image-to-Video mode' : 'Text-to-Video mode'}
+                {hasReference ? 'Image-to-Video mode' : 'Text-to-Video mode'}
               </span>
               <span className="text-xs block">Enter &rarr; Generate</span>
             </div>
             <button
               onClick={handleGenerate}
-              disabled={loading || (!prompt.trim() && !referenceImage) || credits < cost}
+              disabled={loading || (!prompt.trim() && !hasReference) || credits < cost}
               className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl px-6 min-h-[44px] font-medium shadow-lg shadow-violet-500/25 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {loading ? (
@@ -395,7 +410,7 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery }) {
           {/* Reference Image */}
           <div className="flex flex-col gap-1.5 items-center">
             <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">
-              {referenceImage ? 'DEL' : 'IMG'}
+              {hasReference ? 'DEL' : 'IMG'}
             </span>
             <input
               ref={fileInputRef}
@@ -406,10 +421,10 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery }) {
             />
             <button
               type="button"
-              onClick={() => referenceImage ? setReferenceImage(null) : fileInputRef.current?.click()}
-              aria-label={referenceImage ? 'Remove reference image' : 'Upload reference image'}
+              onClick={() => hasReference ? (setReferenceImage(null), setPreloadedImageUrl('')) : fileInputRef.current?.click()}
+              aria-label={hasReference ? 'Remove reference image' : 'Upload reference image'}
               className={`rounded-lg min-h-[44px] min-w-[44px] transition-all border-2 overflow-hidden ${
-                referenceImage
+                hasReference
                   ? 'border-violet-500 dark:border-violet-400'
                   : 'border-dashed border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200'
               }`}
