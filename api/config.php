@@ -73,6 +73,91 @@ define('OPENAI_IMAGE_MODEL', getenv('OPENAI_IMAGE_MODEL') ?: 'gpt-image-1.5');
 define('FAL_AI_API_KEY', getenv('FAL_AI_API_KEY') ?: '');
 define('FAL_AI_BASE_URL', 'https://queue.fal.run');
 
+// ─── Image Models ─────────────────────────────────────────────────────────
+// cost_table: credits indexed by [format][quality]
+// FLUX.1 [dev]        $0.025/megapixel  (Black Forest Labs)
+// Nano Banana Pro     $0.15/image std, $0.30/image 4K  (Google)
+// GPT Image 2         ~$0.01–$0.41/image token-based   (OpenAI via fal.ai)
+$IMAGE_MODELS_CONFIG = [
+    'flux_dev' => [
+        'name'             => 'FLUX.1 [dev]',
+        'description'      => 'High-quality drafts with fast generation. Great value.',
+        'tier'             => 'low',
+        'provider'         => 'fal',
+        'api_endpoint'     => 'https://fal.run/fal-ai/flux/dev',
+        'api_endpoint_i2i' => 'https://fal.run/fal-ai/flux/dev/image-to-image',
+        'supports_editing' => true,
+        'aspect_ratios'    => ['1:1', '3:2', '2:3', '16:9', '9:16'],
+        'size_param'       => 'image_size',
+        'size_map'         => [
+            '1:1'  => ['standard' => ['width' => 1024, 'height' => 1024], 'hires' => ['width' => 2048, 'height' => 2048]],
+            '3:2'  => ['standard' => ['width' => 1536, 'height' => 1024], 'hires' => ['width' => 3072, 'height' => 2048]],
+            '2:3'  => ['standard' => ['width' => 1024, 'height' => 1536], 'hires' => ['width' => 2048, 'height' => 3072]],
+            '16:9' => ['standard' => ['width' => 1344, 'height' => 768],  'hires' => ['width' => 2688, 'height' => 1536]],
+            '9:16' => ['standard' => ['width' => 768,  'height' => 1344], 'hires' => ['width' => 1536, 'height' => 2688]],
+        ],
+        'extra_params'     => ['num_inference_steps' => 28, 'guidance_scale' => 3.5, 'output_format' => 'png'],
+        'cost_table'       => [
+            '1:1'  => ['standard' => 1, 'hires' => 2],
+            '3:2'  => ['standard' => 1, 'hires' => 2],
+            '2:3'  => ['standard' => 1, 'hires' => 2],
+            '16:9' => ['standard' => 1, 'hires' => 2],
+            '9:16' => ['standard' => 1, 'hires' => 2],
+        ],
+    ],
+    'nano_banana' => [
+        'name'             => 'Nano Banana Pro',
+        'description'      => 'Clean images, precise editing, good consistency. Google model.',
+        'tier'             => 'medium',
+        'provider'         => 'fal',
+        'api_endpoint'     => 'https://fal.run/fal-ai/nano-banana-pro',
+        'supports_editing' => true,
+        'aspect_ratios'    => ['1:1', '3:2', '2:3', '16:9', '9:16'],
+        'size_param'       => 'aspect_ratio',
+        'size_map'         => [
+            '1:1'  => ['standard' => '1:1',  'hires' => '1:1'],
+            '3:2'  => ['standard' => '3:2',  'hires' => '3:2'],
+            '2:3'  => ['standard' => '2:3',  'hires' => '2:3'],
+            '16:9' => ['standard' => '16:9', 'hires' => '16:9'],
+            '9:16' => ['standard' => '9:16', 'hires' => '9:16'],
+        ],
+        'extra_params'     => ['output_format' => 'png'],
+        'hires_params'     => ['upscale' => true],
+        'cost_table'       => [
+            '1:1'  => ['standard' => 3, 'hires' => 6],
+            '3:2'  => ['standard' => 3, 'hires' => 6],
+            '2:3'  => ['standard' => 3, 'hires' => 6],
+            '16:9' => ['standard' => 3, 'hires' => 6],
+            '9:16' => ['standard' => 3, 'hires' => 6],
+        ],
+    ],
+    'gpt_image_2' => [
+        'name'             => 'GPT Image 2',
+        'description'      => 'Assets with text, UI visuals, fine detail. OpenAI premium model.',
+        'tier'             => 'high',
+        'provider'         => 'fal',
+        'api_endpoint'     => 'https://fal.run/openai/gpt-image-2',
+        'supports_editing' => true,
+        'aspect_ratios'    => ['1:1', '3:2', '2:3', '16:9', '9:16'],
+        'size_param'       => 'image_size',
+        'size_map'         => [
+            '1:1'  => ['standard' => ['width' => 1024, 'height' => 1024], 'hires' => ['width' => 2048, 'height' => 2048]],
+            '3:2'  => ['standard' => ['width' => 1536, 'height' => 1024], 'hires' => ['width' => 3072, 'height' => 2048]],
+            '2:3'  => ['standard' => ['width' => 1024, 'height' => 1536], 'hires' => ['width' => 2048, 'height' => 3072]],
+            '16:9' => ['standard' => ['width' => 1792, 'height' => 1024], 'hires' => ['width' => 3584, 'height' => 2048]],
+            '9:16' => ['standard' => ['width' => 1024, 'height' => 1792], 'hires' => ['width' => 2048, 'height' => 3584]],
+        ],
+        'extra_params'     => ['quality' => 'high', 'output_format' => 'png'],
+        'cost_table'       => [
+            '1:1'  => ['standard' => 4,  'hires' => 16],
+            '3:2'  => ['standard' => 6,  'hires' => 24],
+            '2:3'  => ['standard' => 6,  'hires' => 24],
+            '16:9' => ['standard' => 7,  'hires' => 28],
+            '9:16' => ['standard' => 7,  'hires' => 28],
+        ],
+    ],
+];
+
 // ─── Video Models ─────────────────────────────────────────────────────────
 // cost_table: credits indexed by [resolution][duration_seconds]
 // Prices derived from Fal.ai per-second / per-video rates

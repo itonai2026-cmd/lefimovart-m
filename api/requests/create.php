@@ -16,12 +16,13 @@ $input = !empty($_POST) ? $_POST : (json_decode(file_get_contents('php://input')
 $prompt = trim($input['prompt'] ?? '');
 $format = $input['format'] ?? '1:1';
 $renderQuality = $input['render_quality'] ?? 'standard';
+$model = trim($input['model'] ?? '');
 $referenceImageUrl = trim($input['reference_image_url'] ?? '');
 
 if ($prompt === '') { json_response(['error' => 'Prompt required'], 400); }
 
 try {
-    $selection = image_generation_selection($format, $renderQuality);
+    $selection = image_generation_selection($format, $renderQuality, $model);
 } catch (InvalidArgumentException $e) {
     json_response(['error' => $e->getMessage()], 400);
 }
@@ -34,8 +35,8 @@ global $pdo;
 try {
     $stmt = $pdo->prepare(
         'INSERT INTO generated_images
-            (user_id, user_email, image_url, prompt, resolution, status, error_message, request_format, render_quality, credits_deducted)
-         VALUES (?, ?, NULL, ?, ?, ?, NULL, ?, ?, 0)'
+            (user_id, user_email, image_url, prompt, resolution, status, error_message, request_format, render_quality, credits_deducted, model_used)
+         VALUES (?, ?, NULL, ?, ?, ?, NULL, ?, ?, 0, ?)'
     );
     $stmt->execute([
         $user['id'],
@@ -45,6 +46,7 @@ try {
         'pending',
         $format,
         $renderQuality,
+        $model ?: null,
     ]);
 
     $requestId = (int)$pdo->lastInsertId();

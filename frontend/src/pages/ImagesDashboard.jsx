@@ -66,12 +66,12 @@ function GenerateImageTab({ credits, setCredits }) {
   const [isLoading, setIsLoading] = useState(false);
   const [referenceImage, setReferenceImage] = useState(null);
   const [styleFilters, setStyleFilters] = useState({ artistic: '', lighting: '', technical: '' });
-  const [settings, setSettings] = useState({ format: '1:1', renderQuality: 'standard' });
+  const [settings, setSettings] = useState({ format: '1:1', renderQuality: 'standard', model: 'flux_dev' });
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
 
-    const cost = getCost(settings.format, settings.renderQuality);
+    const cost = getCost(settings.format, settings.renderQuality, settings.model);
     if (credits < cost) {
       toast.error('Not enough credits.');
       navigate('/buy-credits');
@@ -107,6 +107,7 @@ function GenerateImageTab({ credits, setCredits }) {
       saveData.append('prompt', fullPrompt);
       saveData.append('format', settings.format);
       saveData.append('render_quality', settings.renderQuality);
+      saveData.append('model', settings.model);
       if (referenceImageUrl) saveData.append('reference_image_url', referenceImageUrl);
 
       const saveResponse = await fetch('/wp/lefimovart/api/requests/create.php', {
