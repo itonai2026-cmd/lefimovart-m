@@ -30,7 +30,41 @@ function image_generation_options(): array {
     ];
 }
 
-function image_generation_selection(string $format, string $renderQuality): array {
+function image_generation_selection(string $format, string $renderQuality, string $model = ''): array {
+    global $IMAGE_MODELS_CONFIG;
+
+    // When a known image model is specified, use its cost_table
+    if ($model !== '' && isset($IMAGE_MODELS_CONFIG[$model])) {
+        $cfg  = $IMAGE_MODELS_CONFIG[$model];
+        $cost = $cfg['cost_table'][$format][$renderQuality]
+             ?? $cfg['cost_table']['1:1']['standard']
+             ?? 4;
+
+        // Resolve pixel dimensions from size_map when available
+        $sizeEntry = $cfg['size_map'][$format][$renderQuality] ?? null;
+        if (is_array($sizeEntry) && isset($sizeEntry['width'])) {
+            $width  = $sizeEntry['width'];
+            $height = $sizeEntry['height'];
+        } else {
+            // Fallback to legacy options for dimension info
+            $legacy = image_generation_options();
+            $lo     = $legacy[$format][$renderQuality] ?? $legacy['1:1']['standard'];
+            $width  = $lo['width'];
+            $height = $lo['height'];
+        }
+
+        return [
+            'format'         => $format,
+            'render_quality' => $renderQuality,
+            'api_size'       => $width . 'x' . $height,
+            'width'          => $width,
+            'height'         => $height,
+            'resolution'     => $width . 'x' . $height,
+            'cost'           => $cost,
+        ];
+    }
+
+    // Legacy path (no model specified) — uses hardcoded options
     $options = image_generation_options();
     if (!isset($options[$format]) || !isset($options[$format][$renderQuality])) {
         throw new InvalidArgumentException('Invalid image format or resolution');

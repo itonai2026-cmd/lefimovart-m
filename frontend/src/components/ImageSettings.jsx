@@ -3,21 +3,84 @@ import { ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 
 export const IMAGE_FORMATS = [
-  { id: "1:1", label: "1:1", standard: "1024 x 1024", hires: "2048 x 2048", cost: 4, hiresCost: 16 },
-  { id: "3:2", label: "3:2", standard: "1536 x 1024", hires: "3072 x 2048", cost: 6, hiresCost: 24 },
-  { id: "2:3", label: "2:3", standard: "1024 x 1536", hires: "2048 x 3072", cost: 6, hiresCost: 24 },
-  { id: "16:9", label: "16:9", standard: "1792 x 1008", hires: "3584 x 2016", cost: 7, hiresCost: 28 },
-  { id: "9:16", label: "9:16", standard: "1008 x 1792", hires: "2016 x 3584", cost: 7, hiresCost: 28 },
+  { id: "1:1", label: "1:1", standard: "1024 x 1024", hires: "2048 x 2048" },
+  { id: "3:2", label: "3:2", standard: "1536 x 1024", hires: "3072 x 2048" },
+  { id: "2:3", label: "2:3", standard: "1024 x 1536", hires: "2048 x 3072" },
+  { id: "16:9", label: "16:9", standard: "1792 x 1008", hires: "3584 x 2016" },
+  { id: "9:16", label: "9:16", standard: "1008 x 1792", hires: "2016 x 3584" },
 ];
 
-export function getCost(format = "1:1", renderQuality = "standard") {
-  const choice = IMAGE_FORMATS.find((option) => option.id === format) || IMAGE_FORMATS[0];
-  return renderQuality === "hires" ? choice.hiresCost : choice.cost;
+export const IMAGE_MODELS = {
+  flux_dev: {
+    name: 'FLUX.1 [dev]',
+    description: 'High-quality drafts with fast generation. Great value.',
+    tier: 'low',
+    supports_editing: true,
+    cost_table: {
+      '1:1':  { standard: 1, hires: 2 },
+      '3:2':  { standard: 1, hires: 2 },
+      '2:3':  { standard: 1, hires: 2 },
+      '16:9': { standard: 1, hires: 2 },
+      '9:16': { standard: 1, hires: 2 },
+    },
+  },
+  nano_banana: {
+    name: 'Nano Banana Pro',
+    description: 'Clean images, precise editing, good consistency. Google model.',
+    tier: 'medium',
+    supports_editing: true,
+    cost_table: {
+      '1:1':  { standard: 3, hires: 6 },
+      '3:2':  { standard: 3, hires: 6 },
+      '2:3':  { standard: 3, hires: 6 },
+      '16:9': { standard: 3, hires: 6 },
+      '9:16': { standard: 3, hires: 6 },
+    },
+  },
+  gpt_image_2: {
+    name: 'GPT Image 2',
+    description: 'Assets with text, UI visuals, fine detail. OpenAI premium model.',
+    tier: 'high',
+    supports_editing: true,
+    cost_table: {
+      '1:1':  { standard: 4, hires: 16 },
+      '3:2':  { standard: 6, hires: 24 },
+      '2:3':  { standard: 6, hires: 24 },
+      '16:9': { standard: 7, hires: 28 },
+      '9:16': { standard: 7, hires: 28 },
+    },
+  },
+};
+
+const TIER_COLORS = {
+  low: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700',
+  medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200 dark:border-amber-700',
+  high: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 border-rose-200 dark:border-rose-700',
+};
+
+const TIER_LABELS = { low: 'Budget', medium: 'Balanced', high: 'Premium' };
+
+export function getCost(format = "1:1", renderQuality = "standard", modelKey = "flux_dev") {
+  const model = IMAGE_MODELS[modelKey];
+  if (!model) return 4;
+  return model.cost_table[format]?.[renderQuality] ?? model.cost_table['1:1']?.standard ?? 4;
+}
+
+export function getMinCost(modelKey) {
+  const m = IMAGE_MODELS[modelKey];
+  if (!m) return 0;
+  let min = Infinity;
+  for (const fmt of Object.values(m.cost_table)) {
+    for (const c of Object.values(fmt)) {
+      if (c < min) min = c;
+    }
+  }
+  return min === Infinity ? 0 : min;
 }
 
 export default function ImageSettings({ settings, setSettings, credits, onImageUpload, referenceImage }) {
-  const { format = "1:1", renderQuality = "standard" } = settings;
-  const cost = getCost(format, renderQuality);
+  const { format = "1:1", renderQuality = "standard", model = "flux_dev" } = settings;
+  const cost = getCost(format, renderQuality, model);
   const fileInputRef = useRef(null);
 
   const referenceImageUrl = useMemo(
@@ -59,6 +122,48 @@ export default function ImageSettings({ settings, setSettings, credits, onImageU
 
   return (
     <div className="w-full max-w-2xl mx-auto mt-3 px-1 space-y-3">
+      {/* Model Selector */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 px-5 py-4">
+        <p className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-3 text-center">
+          AI Model
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {Object.entries(IMAGE_MODELS).map(([key, m]) => {
+            const active = key === model;
+            const minCost = getMinCost(key);
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setSettings((s) => ({ ...s, model: key }))}
+                aria-pressed={active}
+                className={`rounded-xl border px-3 py-3 text-left transition-all ${
+                  active
+                    ? "border-violet-500 bg-violet-50 dark:bg-violet-900/30 ring-1 ring-violet-500"
+                    : "border-slate-200 bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className={`text-sm font-bold ${active ? "text-violet-700 dark:text-violet-300" : "text-slate-700 dark:text-slate-200"}`}>
+                    {m.name}
+                  </span>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${TIER_COLORS[m.tier]}`}>
+                    {TIER_LABELS[m.tier]}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mb-1.5">{m.description}</p>
+                <div className="flex items-center gap-1">
+                  <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">from</span>
+                  <span className="text-xs font-bold text-violet-600 dark:text-violet-300">{minCost}</span>
+                  <span className="text-sm leading-none" aria-hidden>🪙</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Settings row: IMG upload, Resolution, Cost, Credits */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 px-5 py-4">
         <div className="flex flex-wrap gap-5 items-center justify-evenly">
           <div className="flex flex-col gap-1.5 items-center">
@@ -129,6 +234,7 @@ export default function ImageSettings({ settings, setSettings, credits, onImageU
         </div>
       </div>
 
+      {/* Format selector */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 px-5 py-4">
         <p className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-3 text-center">
           Image Format

@@ -3,6 +3,7 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/openai_images.php';
 require_once __DIR__ . '/../includes/image_requests.php';
+require_once __DIR__ . '/../includes/fal_images.php';
 
 set_cors_headers();
 
@@ -18,9 +19,9 @@ if ($requestId < 1) { json_response(['error' => 'Image request ID required'], 40
 $user = get_authenticated_user();
 if (!$user) { json_response(['error' => 'Unauthorized'], 401); }
 
-global $pdo;
+global $pdo, $IMAGE_MODELS_CONFIG;
 $stmt = $pdo->prepare(
-    'SELECT id, prompt, request_format, render_quality, status
+    'SELECT id, prompt, request_format, render_quality, status, model_used
      FROM generated_images
      WHERE id = ? AND user_id = ?'
 );
@@ -29,8 +30,10 @@ $request = $stmt->fetch();
 if (!$request) { json_response(['error' => 'Image request not found'], 404); }
 if ($request['status'] !== 'pending') { json_response(['error' => 'Image request has already been processed'], 409); }
 
+$model = $request['model_used'] ?? '';
+
 try {
-    $selection = image_generation_selection($request['request_format'], $request['render_quality']);
+    $selection = image_generation_selection($request['request_format'], $request['render_quality'], $model);
 } catch (InvalidArgumentException $e) {
     json_response(['error' => $e->getMessage()], 400);
 }
@@ -44,13 +47,27 @@ $referenceImageUrl = $_SESSION['image_reference_' . $requestId] ?? '';
 unset($_SESSION['image_reference_' . $requestId]);
 
 try {
-    $quality = 'medium';
-    $image_data = $referenceImageUrl !== ''
-        ? openai_edit_image(local_image_path($referenceImageUrl), $request['prompt'], $selection['api_size'])
-        : openai_generate_image($request['prompt'], $quality, $selection['api_size']);
-    if ($selection['resolution'] !== $selection['api_size']) {
-        $image_data = render_image_dimensions($image_data, $selection['width'], $selection['height']);
+    $useFal = ($model !== '' && isset($IMAGE_MODELS_CONFIG[$model]));
+
+    if ($useFal) {
+        $modelConfig = $IMAGE_MODELS_CONFIG[$model];
+        $image_data = fal_generate_image(
+            $modelConfig,
+            $request['prompt'],
+            $request['request_format'],
+            $request['render_quality'],
+            $referenceImageUrl
+        );
+    } else {
+        $quality = 'medium';
+        $image_data = $referenceImageUrl !== ''
+            ? openai_edit_image(local_image_path($referenceImageUrl), $request['prompt'], $selection['api_size'])
+            : openai_generate_image($request['prompt'], $quality, $selection['api_size']);
+        if ($selection['resolution'] !== $selection['api_size']) {
+            $image_data = render_image_dimensions($image_data, $selection['width'], $selection['height']);
+        }
     }
+
     $image_url = save_image_bytes($image_data, 'img_');
 } catch (RuntimeException $e) {
     $failure = $pdo->prepare('UPDATE generated_images SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?');
