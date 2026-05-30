@@ -74,6 +74,7 @@ function getMinCost(modelKey) {
 }
 
 const RES_LABELS = { '480p': '480p SD', '720p': '720p HD', '1080p': '1080p FHD' };
+const RES_SUBTITLES = { '720p': 'Social media', '1080p': 'Full HD' };
 
 const EST_TIME = {
   kling_o3:  { '720p': { 4: '1-2',  6: '1.5-2.5', 8: '2-3',   10: '2.5-4' },
@@ -553,6 +554,9 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery, initialRefImage,
                   }`}
                 >
                   <span className="block text-sm font-bold">{RES_LABELS[res] || res}</span>
+                  {RES_SUBTITLES[res] && (
+                    <span className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-0.5">{RES_SUBTITLES[res]}</span>
+                  )}
                 </button>
               );
             })}
