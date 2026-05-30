@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ImageIcon, Trash2, Edit2, ChevronLeft, ChevronRight } from "lucide-react";
+import { ImageIcon, Trash2, Edit2, Film, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import {
@@ -169,6 +169,7 @@ export default function Gallery() {
                     </div>
                     <button
                       type="button"
+                      title="Edit"
                       onClick={(e) => {
                         e.stopPropagation();
                         navigate(`/edit?url=${encodeURIComponent(img.image_url)}`);
@@ -179,6 +180,18 @@ export default function Gallery() {
                     </button>
                     <button
                       type="button"
+                      title="Video"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/ai-videos?ref_image=${encodeURIComponent(img.image_url)}`);
+                      }}
+                      className="absolute z-10 rounded-full bg-black/55 hover:bg-black/70 text-white flex items-center justify-center"
+                      style={{ top: "2px", right: "36px", width: "30px", height: "30px" }}>
+                      <Film className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      title="Delete"
                       onClick={(e) => requestDelete(img, e)}
                       className="absolute z-10 rounded-full bg-black/55 hover:bg-black/70 text-white flex items-center justify-center"
                       style={{ bottom: "38px", right: "2px", width: "30px", height: "30px" }}>

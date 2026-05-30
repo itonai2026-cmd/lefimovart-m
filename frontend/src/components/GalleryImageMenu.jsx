@@ -84,7 +84,8 @@ export default function GalleryImageMenu({ imageId, imageUrl, onFlagged, alignLe
         ref={buttonRef}
         type="button"
         onClick={toggleMenu}
-        aria-label="More options"
+        title="Report"
+        aria-label="Report"
         className="flex items-center justify-center rounded-full bg-black/55 hover:bg-black/70 text-white text-xs font-bold select-none transition-colors"
         style={{ letterSpacing: "0.05em", width: "30px", height: "30px", minWidth: "30px", minHeight: "30px" }}
       >
