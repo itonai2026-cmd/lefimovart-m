@@ -1,11 +1,22 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Wand2, Film, Settings, ImageIcon, ChevronDown, Sparkles, Loader2, Clock, X, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Wand2, Film, Settings, ImageIcon, ChevronDown, Sparkles, Loader2, Clock, X, CheckCircle2, AlertCircle, Trash2 } from 'lucide-react';
 import AppLogo from '../components/AppLogo';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/AuthContext';
+import GalleryVideoMenu from '../components/GalleryVideoMenu';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog';
 
 const VIDEO_MODELS = {
   kling_o3: {
@@ -732,6 +743,9 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery, initialRefImage,
 function VideoGalleryTab() {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const pollRef = useRef(null);
 
   useEffect(() => {
@@ -791,6 +805,44 @@ function VideoGalleryTab() {
     }
   };
 
+  const handleFlagged = (videoId) => {
+    setVideos(prev => prev.filter(v => v.id !== videoId));
+  };
+
+  const requestDelete = (video, e) => {
+    e.stopPropagation();
+    setDeleteTarget(video);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget?.id) return;
+    setDeleting(true);
+    try {
+      const res = await fetch('/wp/lefimovart/api/videos/list.php', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ id: deleteTarget.id })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setVideos(prev => prev.filter(v => v.id !== deleteTarget.id));
+        toast.success('Video deleted.');
+      } else {
+        throw new Error(data.error || 'Delete failed.');
+      }
+    } catch (e) {
+      toast.error(e.message || 'Delete failed.');
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
+    }
+  };
+
   const modelDisplayName = (key) => VIDEO_MODELS[key]?.name || key;
 
   return (
@@ -811,6 +863,18 @@ function VideoGalleryTab() {
               className="bg-card rounded-lg overflow-hidden shadow shadow-black/10 border border-border hover:shadow-md transition-shadow"
             >
               <div className="bg-muted h-48 flex items-center justify-center relative">
+                <div className="absolute z-10" style={{ top: '4px', left: '4px' }}>
+                  <GalleryVideoMenu videoId={video.id} onFlagged={handleFlagged} />
+                </div>
+                <button
+                  type="button"
+                  title="Delete"
+                  onClick={(e) => requestDelete(video, e)}
+                  className="absolute z-10 rounded-full bg-black/55 hover:bg-black/70 text-white flex items-center justify-center"
+                  style={{ top: '4px', right: '4px', width: '30px', height: '30px' }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
                 {video.status === 'completed' && video.video_url ? (
                   <>
                     <video
@@ -818,7 +882,7 @@ function VideoGalleryTab() {
                       className="w-full h-full object-cover"
                       src={video.video_url}
                     />
-                    <span className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                    <span className="absolute bottom-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
                       Ready
                     </span>
                   </>
@@ -851,6 +915,23 @@ function VideoGalleryTab() {
           ))}
         </div>
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this video?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove the video from your gallery and from storage. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} disabled={deleting}>
+              {deleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
