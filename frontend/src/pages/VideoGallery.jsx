@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2 } from 'lucide-react';
+import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { toast } from 'sonner';
 import GalleryVideoMenu from '../components/GalleryVideoMenu';
@@ -15,11 +15,14 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
 
+const VIDEOS_PER_PAGE = 10;
+
 export default function VideoGallery() {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -79,7 +82,12 @@ export default function VideoGallery() {
   };
 
   const handleFlagged = (videoId) => {
-    setVideos(prev => prev.filter(v => v.id !== videoId));
+    setVideos(prev => {
+      const next = prev.filter(v => v.id !== videoId);
+      const maxPage = Math.max(1, Math.ceil(next.length / VIDEOS_PER_PAGE));
+      if (page > maxPage) setPage(maxPage);
+      return next;
+    });
   };
 
   const requestDelete = (video, e) => {
@@ -102,7 +110,12 @@ export default function VideoGallery() {
       });
       const data = await res.json();
       if (data.ok) {
-        setVideos(prev => prev.filter(v => v.id !== deleteTarget.id));
+        setVideos(prev => {
+          const next = prev.filter(v => v.id !== deleteTarget.id);
+          const maxPage = Math.max(1, Math.ceil(next.length / VIDEOS_PER_PAGE));
+          if (page > maxPage) setPage(maxPage);
+          return next;
+        });
         toast.success('Video deleted.');
       } else {
         throw new Error(data.error || 'Delete failed.');
@@ -134,8 +147,51 @@ export default function VideoGallery() {
             <p className="text-muted-foreground text-lg">No videos yet. Start generating!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {videos.map(video => (
+          <>
+          {(() => {
+            const totalPages = Math.ceil(videos.length / VIDEOS_PER_PAGE);
+            if (totalPages <= 1) return null;
+            return (
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  type="button"
+                  onClick={() => setPage((c) => Math.max(1, c - 1))}
+                  disabled={page === 1}
+                  aria-label="Previous page"
+                  className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <div className="flex items-center gap-2 flex-wrap justify-center">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pn) => (
+                    <button
+                      key={pn}
+                      type="button"
+                      onClick={() => setPage(pn)}
+                      className={`w-10 h-10 rounded-full text-sm transition-colors ${
+                        pn === page
+                          ? 'font-bold text-white bg-violet-600'
+                          : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      {pn}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPage((c) => Math.min(totalPages, c + 1))}
+                  disabled={page === totalPages}
+                  aria-label="Next page"
+                  className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            );
+          })()}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {videos.slice((page - 1) * VIDEOS_PER_PAGE, page * VIDEOS_PER_PAGE).map(video => (
               <div key={video.id} className="bg-card rounded-lg overflow-hidden shadow shadow-black/10 border border-border">
                 <div className="bg-muted h-48 flex items-center justify-center relative">
                   <div className="absolute z-10" style={{ top: '4px', left: '4px' }}>
@@ -171,6 +227,7 @@ export default function VideoGallery() {
               </div>
             ))}
           </div>
+          </>
         )}
       </div>
 
