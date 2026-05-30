@@ -15,7 +15,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import GalleryImageMenu from "@/components/GalleryImageMenu";
 
-const IMAGES_PER_PAGE = 10;
+const IMAGES_PER_PAGE = 20;
 
 export default function Gallery() {
   const navigate = useNavigate();
