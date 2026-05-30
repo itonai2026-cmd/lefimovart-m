@@ -102,8 +102,8 @@ if (isset($fal_status['status']) && $fal_status['status'] === 'COMPLETED') {
             }
         }
 
-        $upd = $pdo->prepare('UPDATE videos SET status = ?, video_url = ?, completed_at = NOW() WHERE id = ?');
-        $upd->execute(['completed', $local_url, $video['id']]);
+        $upd = $pdo->prepare('UPDATE videos SET status = ?, video_url = ?, original_url = ?, completed_at = NOW() WHERE id = ?');
+        $upd->execute(['completed', $local_url, $video_url, $video['id']]);
         $video['status'] = 'completed';
         $video['video_url'] = $local_url;
     }
