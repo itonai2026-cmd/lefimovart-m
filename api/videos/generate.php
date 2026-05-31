@@ -95,16 +95,24 @@ curl_setopt_array($ch, [
         'Content-Type: application/json',
         'Authorization: Key ' . FAL_AI_API_KEY
     ],
-    CURLOPT_TIMEOUT => 30
+    CURLOPT_CONNECTTIMEOUT => 15,
+    CURLOPT_TIMEOUT => 60
 ]);
 $response = curl_exec($ch);
 $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$curl_errno = curl_errno($ch);
 $curl_error = curl_error($ch);
 curl_close($ch);
 
 $result = json_decode($response, true);
 if ($http_code < 200 || $http_code >= 300 || !$result || !isset($result['request_id'])) {
-    json_response(['error' => $result['detail'] ?? ($curl_error ?: 'Video generation failed')], 502);
+    $message = $result['detail'] ?? '';
+    if ($message === '') {
+        $message = $curl_errno === CURLE_OPERATION_TIMEDOUT
+            ? 'Video provider took too long to accept the request. Please try again.'
+            : ($curl_error ?: 'Video generation failed');
+    }
+    json_response(['error' => $message], 502);
 }
 
 $vid_dir = __DIR__ . '/../../vid';
