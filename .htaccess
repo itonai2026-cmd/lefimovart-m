@@ -16,6 +16,10 @@
     RewriteRule ^assets/(.*)$ frontend/dist/assets/$1 [L]
     RewriteRule ^assets/ - [R=404,L]
 
+    # Serve icons from dist/icons/
+    RewriteCond %{DOCUMENT_ROOT}/wp/lefimovart/frontend/dist/icons/$1 -f
+    RewriteRule ^icons/(.*)$ frontend/dist/icons/$1 [L]
+
     # Serve public files copied by Vite to the dist root (for example lefi-logo.png).
     RewriteCond %{DOCUMENT_ROOT}/wp/lefimovart/frontend/dist/$1 -f
     RewriteRule ^([^/]+\.(?:png|jpe?g|gif|webp|svg|ico|txt|json|webmanifest))$ frontend/dist/$1 [L]
