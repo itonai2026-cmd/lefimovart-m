@@ -78,7 +78,7 @@ foreach ($videos as $v) {
     curl_close($ch);
 
     if ($http_code < 200 || $http_code >= 300 || $bytes === false || strlen($bytes) === 0) {
-        echo "<p class='fail'>&nbsp;&nbsp;[FAILED] HTTP $http_code — " . htmlspecialchars($curl_error ?: 'empty response') . "</p>";
+        echo "<p class='fail'>&nbsp;&nbsp;[FAILED] HTTP $http_code — " . htmlspecialchars($curl_error ?: 'empty response', ENT_QUOTES) . "</p>";
         echo "<p class='fail'>&nbsp;&nbsp;Video #{$v['id']} URL may have expired. Keeping original URL in DB.</p>";
         $failed++;
         flush();
