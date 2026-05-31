@@ -14,7 +14,7 @@ if (($current_user['role'] ?? 'user') !== 'admin') { json_response(['error' => '
 global $pdo;
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $stmt = $pdo->query('SELECT id, email, name, credits, role, created_at FROM users ORDER BY created_at DESC LIMIT 500');
+    $stmt = $pdo->query('SELECT id, email, name, credits, role, created_at, updated_at FROM users ORDER BY created_at DESC LIMIT 500');
     json_response(['ok' => true, 'users' => $stmt->fetchAll()]);
 }
 
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = $pdo->prepare('UPDATE users SET credits = ? WHERE id = ?');
     $stmt->execute([$credits, $user_id]);
 
-    $stmt = $pdo->prepare('SELECT id, email, name, credits, role, created_at FROM users WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id, email, name, credits, role, created_at, updated_at FROM users WHERE id = ?');
     $stmt->execute([$user_id]);
     $updated = $stmt->fetch();
 
