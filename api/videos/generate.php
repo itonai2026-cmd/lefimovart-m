@@ -118,7 +118,15 @@ if ($http_code < 200 || $http_code >= 300 || !$result || !isset($result['request
 $vid_dir = __DIR__ . '/../../vid';
 if (!is_dir($vid_dir)) mkdir($vid_dir, 0755, true);
 
-$stmt = $pdo->prepare('INSERT INTO videos (user_id, user_email, prompt, image_path, model_used, resolution, duration, format, video_url, credits_deducted, status, queue_id, status_url, response_url, api_endpoint) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+$ip_address = $_SERVER['HTTP_X_FORWARDED_FOR']
+    ?? $_SERVER['HTTP_X_REAL_IP']
+    ?? $_SERVER['REMOTE_ADDR']
+    ?? null;
+if ($ip_address !== null) {
+    $ip_address = trim(strtok($ip_address, ','));
+}
+
+$stmt = $pdo->prepare('INSERT INTO videos (user_id, user_email, prompt, image_path, model_used, resolution, duration, format, video_url, credits_deducted, status, queue_id, status_url, response_url, api_endpoint, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 $stmt->execute([
     $user['id'],
     $user['email'],
@@ -134,7 +142,8 @@ $stmt->execute([
     $result['request_id'],
     $result['status_url'] ?? '',
     $result['response_url'] ?? '',
-    $endpoint
+    $endpoint,
+    $ip_address
 ]);
 $vid_id = $pdo->lastInsertId();
 

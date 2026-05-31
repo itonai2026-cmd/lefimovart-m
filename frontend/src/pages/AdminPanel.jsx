@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Coins, Image, ImagePlus, Users, Plus, RefreshCw, Search, ShieldCheck } from "lucide-react";
+import { ChevronLeft, Coins, Image, ImagePlus, Users, Video, Plus, RefreshCw, Search, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useAuth } from "../lib/AuthContext";
 import StickerManager from "../components/admin/StickerManager";
 import UsersTable from "../components/admin/UsersTable";
 import ImagesTable from "../components/admin/ImagesTable";
+import VideosTable from "../components/admin/VideosTable";
 
 const MAX_CREDITS = 40;
 
@@ -15,6 +16,7 @@ const tabs = [
   { name: "stickers", label: "Sticker Gallery", icon: ImagePlus },
   { name: "users", label: "Users", icon: Users },
   { name: "images", label: "Images", icon: Image },
+  { name: "videos", label: "Videos", icon: Video },
 ];
 
 export default function AdminPanel() {
@@ -108,7 +110,7 @@ export default function AdminPanel() {
         </div>
 
         {/* Tab Bar */}
-        <nav className="grid grid-cols-4 gap-2 mb-6">
+        <nav className="grid grid-cols-5 gap-2 mb-6">
           {tabs.map(({ name, label, icon: Icon }) => {
             const active = activeTab === name;
             return (
@@ -231,6 +233,11 @@ export default function AdminPanel() {
           {/* Images Tab */}
           {activeTab === "images" && (
             <ImagesTable />
+          )}
+
+          {/* Videos Tab */}
+          {activeTab === "videos" && (
+            <VideosTable />
           )}
 
         </motion.div>
