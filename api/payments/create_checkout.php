@@ -22,7 +22,7 @@ if (!isset(PLAN_CREDITS[$plan])) {
     json_response(['error' => 'Invalid plan'], 400);
 }
 
-$plan_names = ['bronze' => 'Bronze', 'silver' => 'Silver', 'gold' => 'Gold'];
+$plan_names = ['bronze' => 'Bronze', 'silver' => 'Silver', 'gold' => 'Gold', 'diamond' => 'Diamond', 'rhodium' => 'Rhodium'];
 
 $checkout_data = http_build_query([
     'payment_method_types[0]' => 'card',

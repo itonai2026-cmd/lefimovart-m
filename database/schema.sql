@@ -13,7 +13,7 @@ CREATE TABLE users (
     google_id VARCHAR(255) NULL UNIQUE,
     verification_code VARCHAR(6) NULL,
     is_verified TINYINT(1) DEFAULT 0,
-    credits INT DEFAULT 40,
+    credits INT DEFAULT 15,
     name VARCHAR(255) NULL,
     role ENUM('admin', 'user') DEFAULT 'user',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

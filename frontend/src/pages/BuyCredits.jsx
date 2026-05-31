@@ -10,9 +10,11 @@ export default function BuyCredits() {
   const [loading, setLoading] = useState(null);
 
   const plans = [
-    { id: 'bronze', name: 'Bronze', credits: 40, price: '$2.99' },
-    { id: 'silver', name: 'Silver', credits: 88, price: '$5.99' },
-    { id: 'gold', name: 'Gold', credits: 180, price: '$9.99' },
+    { id: 'bronze', name: 'Bronze', credits: 16, price: '$3' },
+    { id: 'silver', name: 'Silver', credits: 34, price: '$6' },
+    { id: 'gold', name: 'Gold', credits: 65, price: '$10' },
+    { id: 'diamond', name: 'Diamond', credits: 134, price: '$20' },
+    { id: 'rhodium', name: 'Rhodium', credits: 204, price: '$30' },
   ];
 
   useEffect(() => {
@@ -82,7 +84,7 @@ export default function BuyCredits() {
           <p className="text-lg text-muted-foreground">Current Balance: <span className="text-2xl font-bold text-primary">{user?.credits} 🪙</span></p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
           {plans.map(plan => (
             <div key={plan.id} className="bg-card rounded-lg shadow-lg shadow-black/10 p-6 text-center border border-border hover:shadow-xl transition">
               <h3 className="text-2xl font-bold mb-2 text-foreground">{plan.name}</h3>

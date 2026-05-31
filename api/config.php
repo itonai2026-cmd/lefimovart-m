@@ -256,14 +256,18 @@ define('STRIPE_SECRET_KEY', getenv('STRIPE_SECRET_KEY') ?: '');
 
 // ─── Credit Plans ────────────────────────────────────────────────────────
 define('PLAN_CREDITS', [
-    'bronze' => 40,
-    'silver' => 88,
-    'gold' => 180,
+    'bronze'  => 16,
+    'silver'  => 34,
+    'gold'    => 65,
+    'diamond' => 134,
+    'rhodium' => 204,
 ]);
 define('PLAN_PRICES_USD', [
-    'bronze' => 299, // $2.99 in cents
-    'silver' => 599,
-    'gold' => 999,
+    'bronze'  => 300, // $3.00 in cents
+    'silver'  => 600,
+    'gold'    => 1000,
+    'diamond' => 2000,
+    'rhodium' => 3000,
 ]);
 
 // ─── CORS Headers ────────────────────────────────────────────────────────
