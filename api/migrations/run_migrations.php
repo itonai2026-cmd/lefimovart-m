@@ -45,7 +45,7 @@ foreach ($migrations as $name => $sql) {
         echo "<p class='ok'>&nbsp;&nbsp;[OK] Done.</p>";
         $ok++;
     } catch (PDOException $e) {
-        echo "<p class='fail'>&nbsp;&nbsp;[FAILED] " . htmlspecialchars($e->getMessage()) . "</p>";
+        echo "<p class='fail'>&nbsp;&nbsp;[FAILED] " . htmlspecialchars($e->getMessage(), ENT_QUOTES) . "</p>";
         $fail++;
     }
     echo '<hr>';
