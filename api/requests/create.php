@@ -32,11 +32,20 @@ if ((int)$user['credits'] < $selection['cost']) {
 }
 
 global $pdo;
+$ip_address = $_SERVER['HTTP_X_FORWARDED_FOR']
+    ?? $_SERVER['HTTP_X_REAL_IP']
+    ?? $_SERVER['REMOTE_ADDR']
+    ?? null;
+if ($ip_address !== null) {
+    $ip_address = strtok($ip_address, ',');
+    $ip_address = trim($ip_address);
+}
+
 try {
     $stmt = $pdo->prepare(
         'INSERT INTO generated_images
-            (user_id, user_email, image_url, prompt, resolution, status, error_message, request_format, render_quality, credits_deducted, model_used)
-         VALUES (?, ?, NULL, ?, ?, ?, NULL, ?, ?, 0, ?)'
+            (user_id, user_email, image_url, prompt, resolution, status, error_message, request_format, render_quality, credits_deducted, model_used, ip_address)
+         VALUES (?, ?, NULL, ?, ?, ?, NULL, ?, ?, 0, ?, ?)'
     );
     $stmt->execute([
         $user['id'],
@@ -47,6 +56,7 @@ try {
         $format,
         $renderQuality,
         $model ?: null,
+        $ip_address,
     ]);
 
     $requestId = (int)$pdo->lastInsertId();
