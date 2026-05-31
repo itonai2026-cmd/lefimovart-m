@@ -8,6 +8,9 @@
     # Sticker uploads - serve directly
     RewriteRule ^stickers/ - [L]
 
+    # Plan icons - serve directly
+    RewriteRule ^icons/ - [L]
+
     # Protect .env
     RewriteRule \.env$ - [F,L]
 
