@@ -9,7 +9,7 @@ import UsersTable from "../components/admin/UsersTable";
 import ImagesTable from "../components/admin/ImagesTable";
 import VideosTable from "../components/admin/VideosTable";
 
-const MAX_CREDITS = 40;
+const MAX_CREDITS = 15;
 
 const tabs = [
   { name: "credits", label: "Credits", icon: Coins },

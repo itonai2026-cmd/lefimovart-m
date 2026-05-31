@@ -145,7 +145,7 @@ function google_oauth_login(string $code): array {
     } else {
         // Create new user
         $stmt = $pdo->prepare(
-            'INSERT INTO users (email, google_id, name, is_verified, credits) VALUES (?, ?, ?, 1, 40)'
+            'INSERT INTO users (email, google_id, name, is_verified, credits) VALUES (?, ?, ?, 1, 15)'
         );
         $stmt->execute([$email, $google_id, $name]);
         $user_id = (int)$pdo->lastInsertId();

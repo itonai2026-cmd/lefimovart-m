@@ -9,7 +9,7 @@ import EditFilterPanel from "../components/edit/EditFilterPanel";
 
 const API_BASE = "/wp/lefimovart/api";
 const AI_EDIT_COST = 4;
-const DEFAULT_CREDITS = 40;
+const DEFAULT_CREDITS = 15;
 
 const SAVE_EXPORT_FORMATS = {
   png: { mime: "image/png", ext: "png", quality: undefined, opaque: false },
