@@ -68,7 +68,7 @@ if (!$user_row) {
 }
 
 $credits = PLAN_CREDITS[$plan];
-$amount_usd = PLAN_PRICES_USD[$plan] / 100;
+$amount_eur = PLAN_PRICES_CENTS[$plan] / 100;
 
 // Save payment record
 $stmt = $pdo->prepare('INSERT INTO processed_payments (user_id, user_email, session_id, plan, credits_added, amount_usd, stripe_customer_id, stripe_payment_intent_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
@@ -78,7 +78,7 @@ $stmt->execute([
     $session_id,
     $plan,
     $credits,
-    $amount_usd,
+    $amount_eur,
     $session['customer'] ?? null,
     $session['payment_intent'] ?? null
 ]);

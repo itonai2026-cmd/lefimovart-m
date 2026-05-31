@@ -262,12 +262,12 @@ define('PLAN_CREDITS', [
     'diamond' => 134,
     'rhodium' => 204,
 ]);
-define('PLAN_PRICES_USD', [
-    'bronze'  => 300, // $3.00 in cents
-    'silver'  => 600,
-    'gold'    => 1000,
-    'diamond' => 2000,
-    'rhodium' => 3000,
+define('PLAN_PRICES_CENTS', [
+    'bronze'  => 299, // €2.99
+    'silver'  => 599, // €5.99
+    'gold'    => 999, // €9.99
+    'diamond' => 1999, // €19.99
+    'rhodium' => 2999, // €29.99
 ]);
 
 // ─── CORS Headers ────────────────────────────────────────────────────────

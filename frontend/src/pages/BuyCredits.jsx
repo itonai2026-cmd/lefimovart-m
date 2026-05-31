@@ -10,11 +10,11 @@ export default function BuyCredits() {
   const [loading, setLoading] = useState(null);
 
   const plans = [
-    { id: 'bronze', name: 'Bronze', credits: 16, price: '$3' },
-    { id: 'silver', name: 'Silver', credits: 34, price: '$6' },
-    { id: 'gold', name: 'Gold', credits: 65, price: '$10' },
-    { id: 'diamond', name: 'Diamond', credits: 134, price: '$20' },
-    { id: 'rhodium', name: 'Rhodium', credits: 204, price: '$30' },
+    { id: 'bronze', name: 'Bronze', credits: 16, price: '€2.99', icon: '/wp/lefimovart/icons/512_Bronze.png' },
+    { id: 'silver', name: 'Silver', credits: 34, price: '€5.99', icon: '/wp/lefimovart/icons/512_Silver.png' },
+    { id: 'gold', name: 'Gold', credits: 65, price: '€9.99', icon: '/wp/lefimovart/icons/512_Gold.png' },
+    { id: 'diamond', name: 'Diamond', credits: 134, price: '€19.99', icon: '/wp/lefimovart/icons/512_Diamond.png' },
+    { id: 'rhodium', name: 'Rhodium', credits: 204, price: '€29.99', icon: '/wp/lefimovart/icons/512_Rhodium.png' },
   ];
 
   useEffect(() => {
@@ -87,6 +87,7 @@ export default function BuyCredits() {
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
           {plans.map(plan => (
             <div key={plan.id} className="bg-card rounded-lg shadow-lg shadow-black/10 p-6 text-center border border-border hover:shadow-xl transition">
+              <img src={plan.icon} alt={`${plan.name} plan`} className="w-20 h-20 mx-auto mb-3 object-contain" />
               <h3 className="text-2xl font-bold mb-2 text-foreground">{plan.name}</h3>
               <p className="text-4xl font-bold text-primary mb-2">{plan.price}</p>
               <p className="text-lg text-muted-foreground mb-6">{plan.credits} 🪙</p>
