@@ -97,7 +97,7 @@ export default function SettingsPage() {
           </div>
         </motion.div>
 
-        <Row icon={Coins} detail="Bronze / Silver / Gold" onClick={() => navigate("/buy-credits")}>
+        <Row icon={Coins} detail="Bronze / Silver / Gold / Diamond / Rhodium" onClick={() => navigate("/buy-credits")}>
           Buy more credits
         </Row>
 
