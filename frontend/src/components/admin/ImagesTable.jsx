@@ -135,7 +135,7 @@ export default function ImagesTable() {
                 sorted.map((img, idx) => (
                   <tr key={idx} className="hover:bg-violet-50/40 dark:hover:bg-violet-900/10 transition-colors">
                     <td className="px-3 py-3 text-slate-400 dark:text-slate-500 text-xs font-mono">
-                      {(page - 1) * 25 + idx + 1}
+                      {(page - 1) * 15 + idx + 1}
                     </td>
                     <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs">
                       {img.user_email || "\u2014"}

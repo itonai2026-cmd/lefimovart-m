@@ -15,7 +15,7 @@ global $pdo;
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-    $per_page = 25;
+    $per_page = 15;
     $offset = ($page - 1) * $per_page;
 
     $count_stmt = $pdo->query('SELECT COUNT(*) FROM generated_images');

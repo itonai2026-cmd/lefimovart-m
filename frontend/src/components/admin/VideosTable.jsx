@@ -9,8 +9,9 @@ const SortIcon = ({ field, sortField, sortDir }) => {
 
 const columns = [
   { key: "user_email", label: "Email" },
-  { key: "image_path", label: "URL" },
+  { key: "image_path", label: "URL_img" },
   { key: "prompt", label: "Prompt" },
+  { key: "video_url", label: "URL_video" },
   { key: "model_used", label: "Model" },
   { key: "resolution", label: "Resolution" },
   { key: "duration", label: "Duration" },
@@ -137,7 +138,7 @@ export default function VideosTable() {
                 sorted.map((v, idx) => (
                   <tr key={idx} className="hover:bg-violet-50/40 dark:hover:bg-violet-900/10 transition-colors">
                     <td className="px-3 py-3 text-slate-400 dark:text-slate-500 text-xs font-mono">
-                      {(page - 1) * 25 + idx + 1}
+                      {(page - 1) * 15 + idx + 1}
                     </td>
                     <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs">
                       {v.user_email || "\u2014"}
@@ -151,6 +152,13 @@ export default function VideosTable() {
                     </td>
                     <td className="px-4 py-3 text-slate-700 dark:text-slate-300 text-xs max-w-[200px] truncate" title={v.prompt}>
                       {v.prompt || "\u2014"}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-xs max-w-[150px] truncate">
+                      {v.video_url ? (
+                        <a href={v.video_url} target="_blank" rel="noopener noreferrer" className="text-violet-600 dark:text-violet-400 hover:underline">
+                          link
+                        </a>
+                      ) : "\u2014"}
                     </td>
                     <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs">
                       {v.model_used || "\u2014"}

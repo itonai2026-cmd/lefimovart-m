@@ -15,14 +15,14 @@ global $pdo;
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-    $per_page = 25;
+    $per_page = 15;
     $offset = ($page - 1) * $per_page;
 
     $count_stmt = $pdo->query('SELECT COUNT(*) FROM videos');
     $total = (int)$count_stmt->fetchColumn();
 
     $stmt = $pdo->prepare(
-        'SELECT user_email, image_path, prompt, model_used, resolution, duration, format, credits_deducted, completed_at, ip_address FROM videos ORDER BY created_at DESC LIMIT :limit OFFSET :offset'
+        'SELECT user_email, image_path, prompt, video_url, model_used, resolution, duration, format, credits_deducted, completed_at, ip_address FROM videos ORDER BY created_at DESC LIMIT :limit OFFSET :offset'
     );
     $stmt->bindValue(':limit', $per_page, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
