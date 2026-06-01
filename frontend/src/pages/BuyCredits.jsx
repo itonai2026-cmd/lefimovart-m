@@ -19,13 +19,12 @@ export default function BuyCredits() {
 
   useEffect(() => {
     const sessionId = searchParams.get('session_id');
-    const plan = searchParams.get('plan');
-    if (sessionId && plan) {
-      verifyPayment(sessionId, plan);
+    if (sessionId) {
+      verifyPayment(sessionId);
     }
   }, []);
 
-  const verifyPayment = async (sessionId, plan) => {
+  const verifyPayment = async (sessionId) => {
     try {
       const res = await fetch('/wp/lefimovart/api/payments/verify_stripe.php', {
         method: 'POST',
@@ -33,19 +32,25 @@ export default function BuyCredits() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ session_id: sessionId, plan })
+        body: JSON.stringify({ session_id: sessionId })
       });
       const data = await res.json();
-      if (data.ok) {
-        toast.success(`Payment successful! ${data.credits} 🪙 added.`);
-        const meRes = await fetch('/wp/lefimovart/api/auth/me.php', {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        const meData = await meRes.json();
-        if (meData.user) setUser(meData.user);
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || 'Payment could not be confirmed');
       }
+      if (data.already_processed) {
+        toast.info('Payment already processed. Your credits are already in your balance.');
+      } else {
+        toast.success(`Payment successful! ${data.credits} 🪙 added.`);
+      }
+      const meRes = await fetch('/wp/lefimovart/api/auth/me.php', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      const meData = await meRes.json();
+      if (meData.user) setUser(meData.user);
+      navigate('/buy-credits', { replace: true });
     } catch (e) {
-      toast.error('Payment verification failed');
+      toast.error(`${e.message || 'Payment verification failed'}. Credits were not changed by this check.`);
     }
   };
 

@@ -59,6 +59,11 @@ GOOGLE_CALLBACK_URL=https://itonai.ro/wp/lefimovart/api/auth/google_callback.php
 STRIPE_SECRET_KEY=sk_test_your_test_key_here
 STRIPE_PUBLIC_KEY=pk_test_your_public_key_here
 STRIPE_ENDPOINT_SECRET=whsec_your_webhook_secret_here
+STRIPE_PRICE_BRONZE=price_your_bronze_price_id
+STRIPE_PRICE_SILVER=price_your_silver_price_id
+STRIPE_PRICE_GOLD=price_your_gold_price_id
+STRIPE_PRICE_DIAMOND=price_your_diamond_price_id
+STRIPE_PRICE_RHODIUM=price_your_rhodium_price_id
 
 # Email Configuration (SMTP)
 SMTP_HOST=smtp.gmail.com
@@ -126,7 +131,8 @@ Should show the login page.
 ### Stripe not processing payments
 - Verify Stripe keys in .env
 - Test with Stripe test keys first
-- Check webhook endpoint is configured in Stripe dashboard
+- Check webhook endpoint is configured in Stripe dashboard:
+  `https://itonai.ro/wp/lefimovart/api/payments/webhook.php`
 
 ## File Structure on Server
 ```
