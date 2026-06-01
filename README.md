@@ -28,6 +28,7 @@ Editează `.env` și adaugă credențialele:
 - `FAL_AI_API_KEY` pentru generare video
 - `GOOGLE_CLIENT_ID` și `GOOGLE_CLIENT_SECRET`
 - `STRIPE_SECRET_KEY` (dacă vrei plăți)
+- `STRIPE_PRICE_*` pentru fiecare plan din catalogul Stripe
 
 Pentru OpenAI, creează un **Project API key** în dashboard-ul OpenAI, din `API keys`, apoi adaugă cheia numai în `.env` pe server:
 
@@ -73,6 +74,7 @@ Copiază directoarele `api/`, `database/` și `frontend/dist/`, plus `.htaccess`
 ### Payments
 - `POST /api/payments/create_checkout.php` - Creare sesiune Stripe Checkout
 - `POST /api/payments/verify_stripe.php` - Verificare plata Stripe
+- `POST /api/payments/webhook.php` - Webhook Stripe `checkout.session.completed`
 
 ## 📱 Funcționalități
 
@@ -83,7 +85,7 @@ Copiază directoarele `api/`, `database/` și `frontend/dist/`, plus `.htaccess`
 ✅ Galerie imagini/video
 ✅ Autentificare email + Google OAuth
 ✅ Sistem de credite
-✅ Plăți Stripe (Bronze/Silver/Gold)
+✅ Plăți Stripe (Bronze/Silver/Gold/Diamond/Rhodium)
 ✅ Mobile-responsive
 ✅ PWA support
 
@@ -133,7 +135,24 @@ OPENAI_IMAGE_MODEL=gpt-image-1.5
 GOOGLE_CLIENT_ID=***
 GOOGLE_CLIENT_SECRET=***
 STRIPE_SECRET_KEY=sk_live_***
+STRIPE_PUBLIC_KEY=pk_live_***
+STRIPE_ENDPOINT_SECRET=whsec_***
+STRIPE_PRICE_BRONZE=price_***
+STRIPE_PRICE_SILVER=price_***
+STRIPE_PRICE_GOLD=price_***
+STRIPE_PRICE_DIAMOND=price_***
+STRIPE_PRICE_RHODIUM=price_***
 ```
+
+Configurează în Stripe Dashboard webhook-ul către:
+
+```text
+https://itonai.ro/wp/lefimovart/api/payments/webhook.php
+```
+
+Eveniment minim necesar: `checkout.session.completed`. Secretul de signing generat de acel endpoint se salvează în `STRIPE_ENDPOINT_SECRET`.
+
+Creditele se acordă o singură dată, numai după ce Stripe confirmă sesiunea ca `paid` și `complete`, iar Price ID-ul, moneda și suma corespund planului configurat. Pentru plăți anulate, incomplete, cu Price ID greșit sau neverificate, soldul de credite rămâne neschimbat.
 
 ## 📝 Licență
 

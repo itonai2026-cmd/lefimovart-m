@@ -22,22 +22,27 @@ if (!isset(PLAN_CREDITS[$plan])) {
     json_response(['error' => 'Invalid plan'], 400);
 }
 
-$plan_names = ['bronze' => 'Bronze', 'silver' => 'Silver', 'gold' => 'Gold', 'diamond' => 'Diamond', 'rhodium' => 'Rhodium'];
+$price_id = PLAN_PRICE_IDS[$plan] ?? '';
+if (empty($price_id)) {
+    json_response(['error' => 'Stripe price is not configured for this plan'], 500);
+}
 
 $checkout_data = http_build_query([
     'payment_method_types[0]' => 'card',
     'mode' => 'payment',
     'customer_email' => $user['email'],
     'client_reference_id' => $user['email'],
-    'line_items[0][price_data][currency]' => 'eur',
-    'line_items[0][price_data][product_data][name]' => 'LefiMovArt ' . ($plan_names[$plan] ?? $plan) . ' Plan',
-    'line_items[0][price_data][product_data][description]' => PLAN_CREDITS[$plan] . ' credits',
-    'line_items[0][price_data][unit_amount]' => PLAN_PRICES_CENTS[$plan],
+    'line_items[0][price]' => $price_id,
     'line_items[0][quantity]' => 1,
-    'success_url' => rtrim(APP_URL, '/') . BASE_PATH . '/buy-credits?session_id={CHECKOUT_SESSION_ID}&plan=' . $plan,
+    'success_url' => rtrim(APP_URL, '/') . BASE_PATH . '/buy-credits?session_id={CHECKOUT_SESSION_ID}',
     'cancel_url' => rtrim(APP_URL, '/') . BASE_PATH . '/buy-credits',
     'metadata[plan]' => $plan,
+    'metadata[plan_name]' => PLAN_NAMES[$plan],
+    'metadata[credits]' => PLAN_CREDITS[$plan],
     'metadata[user_email]' => $user['email'],
+    'payment_intent_data[metadata][plan]' => $plan,
+    'payment_intent_data[metadata][credits]' => PLAN_CREDITS[$plan],
+    'payment_intent_data[metadata][user_email]' => $user['email'],
 ]);
 
 $ch = curl_init('https://api.stripe.com/v1/checkout/sessions');

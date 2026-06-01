@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../includes/jwt.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/stripe_payment.php';
 
 set_cors_headers();
 
@@ -13,78 +14,23 @@ if (empty(STRIPE_SECRET_KEY)) {
 
 $input = json_decode(file_get_contents('php://input'), true);
 $session_id = $input['session_id'] ?? '';
-$plan = $input['plan'] ?? '';
 
 if (empty($session_id) || !preg_match('/^cs_/', $session_id)) {
     json_response(['error' => 'Invalid session ID'], 400);
 }
 
-if (!isset(PLAN_CREDITS[$plan])) {
-    json_response(['error' => 'Invalid plan'], 400);
+$payload = require_auth();
+$authenticated_user = get_authenticated_user();
+if (!$authenticated_user) { json_response(['error' => 'Unauthorized'], 401); }
+
+[$session, $error] = stripe_get_checkout_session($session_id);
+if ($error) {
+    json_response(['error' => $error], 400);
 }
 
-global $pdo;
-
-// Check if already processed
-$stmt = $pdo->prepare('SELECT id FROM processed_payments WHERE session_id = ?');
-$stmt->execute([$session_id]);
-if ($stmt->fetch()) {
-    json_response(['ok' => true, 'message' => 'Already processed']);
+$result = process_paid_checkout_session($session, $authenticated_user['email']);
+if (empty($result['ok'])) {
+    json_response(['error' => $result['error'] ?? 'Payment verification failed'], $result['status'] ?? 400);
 }
 
-// Verify with Stripe
-$ch = curl_init('https://api.stripe.com/v1/checkout/sessions/' . urlencode($session_id));
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
-    CURLOPT_USERPWD => STRIPE_SECRET_KEY . ':',
-    CURLOPT_TIMEOUT => 10
-]);
-$response = curl_exec($ch);
-$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
-
-if ($http_code !== 200) {
-    json_response(['error' => 'Stripe verification failed'], 400);
-}
-
-$session = json_decode($response, true);
-if ($session['payment_status'] !== 'paid' || $session['status'] !== 'complete') {
-    json_response(['error' => 'Payment not completed'], 400);
-}
-
-// Get user email and add credits
-$email = $session['customer_email'] ?? $session['client_reference_id'] ?? '';
-if (empty($email)) {
-    json_response(['error' => 'No email found'], 400);
-}
-
-// Find user
-$user_stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
-$user_stmt->execute([$email]);
-$user_row = $user_stmt->fetch();
-if (!$user_row) {
-    json_response(['error' => 'User not found'], 400);
-}
-
-$credits = PLAN_CREDITS[$plan];
-$amount_eur = PLAN_PRICES_CENTS[$plan] / 100;
-
-// Save payment record
-$stmt = $pdo->prepare('INSERT INTO processed_payments (user_id, user_email, session_id, plan, credits_added, amount_usd, stripe_customer_id, stripe_payment_intent_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-$stmt->execute([
-    $user_row['id'],
-    $email,
-    $session_id,
-    $plan,
-    $credits,
-    $amount_eur,
-    $session['customer'] ?? null,
-    $session['payment_intent'] ?? null
-]);
-
-// Add credits to user
-$stmt = $pdo->prepare('UPDATE users SET credits = credits + ? WHERE email = ?');
-$stmt->execute([$credits, $email]);
-
-json_response(['ok' => true, 'credits' => $credits]);
+json_response($result);

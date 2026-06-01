@@ -253,8 +253,16 @@ define('GOOGLE_REDIRECT_URI', APP_URL . BASE_PATH . '/api/auth/google_callback.p
 
 // ─── Stripe ──────────────────────────────────────────────────────────────
 define('STRIPE_SECRET_KEY', getenv('STRIPE_SECRET_KEY') ?: '');
+define('STRIPE_ENDPOINT_SECRET', getenv('STRIPE_ENDPOINT_SECRET') ?: '');
 
 // ─── Credit Plans ────────────────────────────────────────────────────────
+define('PLAN_NAMES', [
+    'bronze'  => 'Bronze',
+    'silver'  => 'Silver',
+    'gold'    => 'Gold',
+    'diamond' => 'Diamond',
+    'rhodium' => 'Rhodium',
+]);
 define('PLAN_CREDITS', [
     'bronze'  => 16,
     'silver'  => 34,
@@ -268,6 +276,14 @@ define('PLAN_PRICES_CENTS', [
     'gold'    => 999, // €9.99
     'diamond' => 1999, // €19.99
     'rhodium' => 2999, // €29.99
+]);
+define('PLAN_CURRENCY', 'eur');
+define('PLAN_PRICE_IDS', [
+    'bronze'  => getenv('STRIPE_PRICE_BRONZE') ?: '',
+    'silver'  => getenv('STRIPE_PRICE_SILVER') ?: '',
+    'gold'    => getenv('STRIPE_PRICE_GOLD') ?: '',
+    'diamond' => getenv('STRIPE_PRICE_DIAMOND') ?: '',
+    'rhodium' => getenv('STRIPE_PRICE_RHODIUM') ?: '',
 ]);
 
 // ─── CORS Headers ────────────────────────────────────────────────────────
