@@ -47,7 +47,7 @@ export default function Home() {
     }
   };
 
-  const buttonClassName = `w-full group relative overflow-hidden rounded-2xl border border-white/20 dark:border-slate-700 p-8 min-h-[148px] text-white font-bold transition-all duration-300 bg-cover bg-center shadow-lg shadow-black/20 ${
+  const buttonClassName = `w-full max-w-[370px] h-[150px] mx-auto group relative overflow-hidden rounded-2xl border border-white/20 dark:border-slate-700 p-6 text-white font-bold transition-all duration-300 bg-cover bg-center shadow-lg shadow-black/20 ${
     acceptedTerms
       ? 'hover:shadow-2xl hover:scale-105 active:scale-95 cursor-pointer'
       : 'opacity-70 cursor-not-allowed grayscale-[0.25]'
@@ -96,7 +96,7 @@ export default function Home() {
           >
             <div className="absolute inset-0 bg-black/25 group-hover:bg-black/20 transition-colors" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
-            <div className="relative flex min-h-[84px] flex-col items-center justify-center gap-2">
+            <div className="relative flex h-full flex-col items-center justify-center gap-2">
               <div>
                 <p className="text-2xl sm:text-3xl font-bold tracking-wide drop-shadow-[0_3px_8px_rgba(0,0,0,0.95)]">AI Image Generation</p>
                 <p className="text-base sm:text-lg font-semibold text-violet-100 drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">Generate & Modify Images</p>
@@ -113,7 +113,7 @@ export default function Home() {
           >
             <div className="absolute inset-0 bg-black/25 group-hover:bg-black/20 transition-colors" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
-            <div className="relative flex min-h-[84px] flex-col items-center justify-center gap-2">
+            <div className="relative flex h-full flex-col items-center justify-center gap-2">
               <div>
                 <p className="text-2xl sm:text-3xl font-bold tracking-wide drop-shadow-[0_3px_8px_rgba(0,0,0,0.95)]">AI Video Generation</p>
                 <p className="text-base sm:text-lg font-semibold text-purple-100 drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">Create Amazing Videos</p>

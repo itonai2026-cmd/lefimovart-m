@@ -51,7 +51,7 @@ There is no automated PHP/JS test suite.
 ## Session changelog
 > Maintenance (for future sessions): when you change this repo, prepend ONE concise line below — format `YYYY-MM-DD — what changed (PR #N)`. Keep only the most recent 5 entries; delete older ones so this section never exceeds 5 lines and the file stays small.
 
-- 2026-06-01 — Replaced Buy Credits payment plan icons with 128px assets (PR #51)
+- 2026-06-01 — Replaced Buy Credits payment icons and landing button backgrounds (PR #51)
 - 2026-05-31 — Verified PHP 8.0–8.3 compatibility; explicit `htmlspecialchars` flags; added PHP 8.3 to CI matrix (PR #35)
 - 2026-05-31 — Added GitHub Actions CI pipeline: PHP lint + frontend build/lint (PR #34)
 - 2026-05-31 — Hardened Fal.ai video submit against timeouts (timeout 30→60s, connect timeout, clearer 502 message) (PR #33)
