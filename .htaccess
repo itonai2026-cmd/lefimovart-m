@@ -11,6 +11,7 @@
     # Plan icons - bundled into frontend/dist/icons/ via Vite (frontend/public/icons/)
     RewriteCond %{DOCUMENT_ROOT}/wp/lefimovart/frontend/dist/icons/$1 -f
     RewriteRule ^icons/(.+)$ frontend/dist/icons/$1 [L]
+    RewriteRule ^icons/ - [R=404,L]
 
     # Protect .env
     RewriteRule \.env$ - [F,L]
