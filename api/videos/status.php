@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/video_thumbs.php';
 
 set_cors_headers();
 
@@ -14,7 +15,7 @@ global $pdo;
 $id = intval($_GET['id'] ?? 0);
 if (!$id) { json_response(['error' => 'Video ID required'], 400); }
 
-$stmt = $pdo->prepare('SELECT id, status, video_url, queue_id, status_url, response_url, api_endpoint, error_message FROM videos WHERE id = ? AND user_email = ?');
+$stmt = $pdo->prepare('SELECT id, status, video_url, thumbnail_url, queue_id, status_url, response_url, api_endpoint, error_message FROM videos WHERE id = ? AND user_email = ?');
 $stmt->execute([$id, $user['email']]);
 $video = $stmt->fetch();
 
@@ -75,9 +76,15 @@ if (isset($fal_status['status']) && $fal_status['status'] === 'COMPLETED') {
 
     $result = json_decode($result_response, true);
     $video_url = $result['video']['url'] ?? '';
+    $fal_thumbnail = $result['thumbnail_url']
+        ?? ($result['video']['thumbnail_url'] ?? null)
+        ?? ($result['image']['url'] ?? null)
+        ?? ($result['images'][0]['url'] ?? null)
+        ?? '';
 
     if ($video_url) {
         $local_url = $video_url;
+        $local_video_path = null;
 
         // Download video to local vid/ directory
         $vid_dir = __DIR__ . '/../../vid';
@@ -99,13 +106,21 @@ if (isset($fal_status['status']) && $fal_status['status'] === 'COMPLETED') {
         if ($dl_http >= 200 && $dl_http < 300 && $video_bytes !== false && strlen($video_bytes) > 0) {
             if (file_put_contents($filepath, $video_bytes) !== false) {
                 $local_url = BASE_PATH . '/vid/' . $filename;
+                $local_video_path = $filepath;
             }
         }
 
-        $upd = $pdo->prepare('UPDATE videos SET status = ?, video_url = ?, original_url = ?, completed_at = NOW() WHERE id = ?');
-        $upd->execute(['completed', $local_url, $video_url, $video['id']]);
+        // Best-effort poster: provider thumbnail first, else first frame via ffmpeg.
+        $poster_url = download_video_poster((string)$fal_thumbnail, (int)$video['id']);
+        if ($poster_url === null && $local_video_path !== null) {
+            $poster_url = generate_video_poster_from_file($local_video_path, (int)$video['id']);
+        }
+
+        $upd = $pdo->prepare('UPDATE videos SET status = ?, video_url = ?, original_url = ?, thumbnail_url = ?, completed_at = NOW() WHERE id = ?');
+        $upd->execute(['completed', $local_url, $video_url, $poster_url, $video['id']]);
         $video['status'] = 'completed';
         $video['video_url'] = $local_url;
+        $video['thumbnail_url'] = $poster_url;
     }
 } elseif (isset($fal_status['status']) && $fal_status['status'] === 'FAILED') {
     $error = $fal_status['error'] ?? 'Unknown error';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trash2, ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { toast } from 'sonner';
 import GalleryVideoMenu from '../components/GalleryVideoMenu';
@@ -26,6 +26,10 @@ export default function VideoGallery() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  // Only mount a real <video> for clips the user taps. Rendering 10 live
+  // <video> elements at once exhausts mobile decoders/memory; until tapped we
+  // show a lightweight poster instead.
+  const [activeVideos, setActiveVideos] = useState(() => new Set());
   const pollRef = useRef(null);
 
   useEffect(() => {
@@ -207,14 +211,41 @@ export default function VideoGallery() {
                     <Trash2 className="w-4 h-4" />
                   </button>
                   {video.status === 'completed' && video.video_url ? (
-                    <video
-                      controls
-                      preload="metadata"
-                      playsInline
-                      muted
-                      className="w-full h-full object-cover"
-                      src={video.video_url}
-                    ></video>
+                    activeVideos.has(video.id) ? (
+                      <video
+                        controls
+                        autoPlay
+                        preload="metadata"
+                        playsInline
+                        muted
+                        className="w-full h-full object-cover"
+                        src={video.video_url}
+                      ></video>
+                    ) : (
+                      <button
+                        type="button"
+                        aria-label="Play video"
+                        onClick={() => setActiveVideos(prev => new Set(prev).add(video.id))}
+                        className="w-full h-full relative group/play"
+                      >
+                        {video.thumbnail_url ? (
+                          <img
+                            src={video.thumbnail_url}
+                            alt={video.prompt}
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-900"></div>
+                        )}
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <span className="rounded-full bg-black/55 group-hover/play:bg-black/70 text-white flex items-center justify-center" style={{ width: '56px', height: '56px' }}>
+                            <Play className="w-7 h-7" style={{ marginLeft: '3px' }} />
+                          </span>
+                        </span>
+                      </button>
+                    )
                   ) : video.status === 'failed' ? (
                     <div className="text-center p-4">
                       <p className="text-red-400 font-bold text-sm">Failed</p>

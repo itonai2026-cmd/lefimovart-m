@@ -165,6 +165,80 @@ function save_image_bytes(string $bytes, string $prefix): string {
     return BASE_PATH . '/img/' . $filename;
 }
 
+function image_thumbs_dir(): string {
+    $dir = image_storage_dir() . '/thumbs';
+    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+        throw new RuntimeException('Thumbnail storage is unavailable.');
+    }
+    return $dir;
+}
+
+/**
+ * Downscale raw image bytes to a small JPEG suitable for gallery grids.
+ * Returns null (instead of throwing) when GD is missing or the source can't
+ * be decoded, so callers can fall back to the full-size image.
+ */
+function make_image_thumbnail_bytes(string $bytes, int $width = 512): ?string {
+    if (!function_exists('imagecreatefromstring')) {
+        return null;
+    }
+    $source = @imagecreatefromstring($bytes);
+    if ($source === false) {
+        return null;
+    }
+    $sourceWidth = imagesx($source);
+    $sourceHeight = imagesy($source);
+    if ($sourceWidth < 1 || $sourceHeight < 1) {
+        imagedestroy($source);
+        return null;
+    }
+
+    $targetWidth = min($width, $sourceWidth);
+    $targetHeight = (int)max(1, round($sourceHeight * ($targetWidth / $sourceWidth)));
+
+    $output = imagecreatetruecolor($targetWidth, $targetHeight);
+    $white = imagecolorallocate($output, 255, 255, 255);
+    imagefilledrectangle($output, 0, 0, $targetWidth, $targetHeight, $white);
+    imagecopyresampled(
+        $output,
+        $source,
+        0, 0, 0, 0,
+        $targetWidth, $targetHeight,
+        $sourceWidth, $sourceHeight
+    );
+
+    ob_start();
+    $ok = imagejpeg($output, null, 82);
+    $data = ob_get_clean();
+    imagedestroy($output);
+    imagedestroy($source);
+
+    return ($ok && $data !== false && $data !== '') ? $data : null;
+}
+
+/**
+ * Build (and persist) a thumbnail for an already-saved image. The thumbnail
+ * filename matches the on-the-fly thumb.php cache convention
+ * (thumbs/<width>_<mainFilename>.jpg) so both paths share one cached file.
+ * Returns the public thumbnail URL, or null on failure.
+ */
+function save_image_thumbnail(string $bytes, string $mainFilename, int $width = 512): ?string {
+    $data = make_image_thumbnail_bytes($bytes, $width);
+    if ($data === null) {
+        return null;
+    }
+    try {
+        $dir = image_thumbs_dir();
+    } catch (RuntimeException $e) {
+        return null;
+    }
+    $thumbName = $width . '_' . basename($mainFilename) . '.jpg';
+    if (file_put_contents($dir . '/' . $thumbName, $data) === false) {
+        return null;
+    }
+    return BASE_PATH . '/img/thumbs/' . $thumbName;
+}
+
 function local_image_path(string $url): string {
     $path = parse_url($url, PHP_URL_PATH) ?: '';
     $prefix = BASE_PATH . '/img/';

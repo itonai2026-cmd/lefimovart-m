@@ -32,6 +32,7 @@ $migrations = [
     'Add flagged_reason column to videos' => 'ALTER TABLE videos ADD COLUMN IF NOT EXISTS flagged_reason VARCHAR(120) DEFAULT NULL',
     'Add model_used column to generated_images' => 'ALTER TABLE generated_images ADD COLUMN IF NOT EXISTS model_used VARCHAR(50) DEFAULT NULL',
     'Add original_url column to videos' => 'ALTER TABLE videos ADD COLUMN IF NOT EXISTS original_url TEXT DEFAULT NULL',
+    'Add thumbnail_url column to generated_images' => 'ALTER TABLE generated_images ADD COLUMN IF NOT EXISTS thumbnail_url VARCHAR(512) DEFAULT NULL',
 ];
 
 $ok = 0;

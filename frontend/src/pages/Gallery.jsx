@@ -215,7 +215,7 @@ export default function Gallery() {
                       <Trash2 className="w-4 h-4" />
                     </button>
                     <img
-                      src={galleryThumb(img.image_url)}
+                      src={img.thumbnail_url || galleryThumb(img.image_url)}
                       alt={img.prompt}
                       loading="lazy"
                       decoding="async"

@@ -14,7 +14,10 @@
  * Usage: /wp/lefimovart/api/images/thumb.php?f=img_xxx.png&w=512
  */
 
-require_once __DIR__ . '/../config.php';
+// Intentionally NOT including config.php: it calls session_start() (whose
+// file lock would serialize the many concurrent <img> thumbnail requests a
+// gallery fires) and opens a DB connection this endpoint never uses. We only
+// need the pure helpers below, which rely solely on __DIR__.
 require_once __DIR__ . '/../includes/openai_images.php';
 
 $requestedFile = $_GET['f'] ?? $_GET['file'] ?? '';
@@ -62,42 +65,19 @@ if (is_file($thumbPath) && filemtime($thumbPath) >= filemtime($srcPath)) {
 }
 
 $bytes = file_get_contents($srcPath);
-$source = $bytes !== false ? @imagecreatefromstring($bytes) : false;
-if ($source === false) {
+$data = $bytes !== false ? make_image_thumbnail_bytes($bytes, $width) : null;
+if ($data === null) {
+    // GD missing, undecodable, or source already small — serve the original.
     thumb_serve_file($srcPath, $originalType);
 }
 
-$sourceWidth = imagesx($source);
-$sourceHeight = imagesy($source);
-
-// Already small enough — no point downscaling.
-if ($sourceWidth <= $width) {
-    imagedestroy($source);
-    thumb_serve_file($srcPath, $originalType);
-}
-
-$targetWidth = $width;
-$targetHeight = (int)max(1, round($sourceHeight * ($width / $sourceWidth)));
-
-$output = imagecreatetruecolor($targetWidth, $targetHeight);
-// Flatten transparency onto white so the JPEG looks correct.
-$white = imagecolorallocate($output, 255, 255, 255);
-imagefilledrectangle($output, 0, 0, $targetWidth, $targetHeight, $white);
-imagecopyresampled(
-    $output,
-    $source,
-    0, 0, 0, 0,
-    $targetWidth, $targetHeight,
-    $sourceWidth, $sourceHeight
-);
-
-$saved = imagejpeg($output, $thumbPath, 82);
-imagedestroy($output);
-imagedestroy($source);
-
-if ($saved && is_file($thumbPath)) {
+if (file_put_contents($thumbPath, $data) !== false) {
     thumb_serve_file($thumbPath, 'image/jpeg');
 }
 
-// Last resort: original file.
-thumb_serve_file($srcPath, $originalType);
+// Could not cache — stream the freshly built thumbnail anyway.
+header('Content-Type: image/jpeg');
+header('Cache-Control: public, max-age=31536000, immutable');
+header('Content-Length: ' . strlen($data));
+echo $data;
+exit;

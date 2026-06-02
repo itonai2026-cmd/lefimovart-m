@@ -4,6 +4,7 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/openai_images.php';
 require_once __DIR__ . '/../includes/image_requests.php';
 require_once __DIR__ . '/../includes/fal_images.php';
+require_once __DIR__ . '/../includes/generated_images.php';
 
 set_cors_headers();
 
@@ -69,6 +70,7 @@ try {
     }
 
     $image_url = save_image_bytes($image_data, 'img_');
+    $thumbnail_url = save_image_thumbnail($image_data, basename($image_url));
 } catch (RuntimeException $e) {
     $failure = $pdo->prepare('UPDATE generated_images SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?');
     $failure->execute(['failed', $e->getMessage(), $requestId, $user['id']]);
@@ -76,6 +78,7 @@ try {
 }
 
 try {
+    ensure_generated_images_thumbnail_url_column($pdo);
     $pdo->beginTransaction();
     $upd = $pdo->prepare('UPDATE users SET credits = credits - ? WHERE id = ? AND credits >= ?');
     $upd->execute([$selection['cost'], $user['id'], $selection['cost']]);
@@ -84,10 +87,10 @@ try {
     }
     $stmt = $pdo->prepare(
         'UPDATE generated_images
-         SET image_url = ?, status = ?, credits_deducted = ?, error_message = NULL, completed_at = CURRENT_TIMESTAMP
+         SET image_url = ?, thumbnail_url = ?, status = ?, credits_deducted = ?, error_message = NULL, completed_at = CURRENT_TIMESTAMP
          WHERE id = ? AND user_id = ? AND status = ?'
     );
-    $stmt->execute([$image_url, 'ready', $selection['cost'], $requestId, $user['id'], 'processing']);
+    $stmt->execute([$image_url, $thumbnail_url, 'ready', $selection['cost'], $requestId, $user['id'], 'processing']);
     if ($stmt->rowCount() !== 1) {
         throw new RuntimeException('Image request could not be completed');
     }
