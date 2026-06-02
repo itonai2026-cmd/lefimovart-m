@@ -17,6 +17,23 @@ import GalleryImageMenu from "@/components/GalleryImageMenu";
 
 const IMAGES_PER_PAGE = 20;
 
+// Gallery cells are small, but generated images are stored at full resolution
+// (up to 3584x2048). Decoding ~10 full-res images at once exhausts the image
+// memory budget of mobile browsers, so later images never render. Request a
+// downscaled thumbnail for local images instead; leave external URLs untouched.
+function galleryThumb(imageUrl, width = 512) {
+  if (!imageUrl) return imageUrl;
+  try {
+    const u = new URL(imageUrl, window.location.origin);
+    const match = u.pathname.match(/^(.*)\/img\/([^/]+)$/);
+    if (!match) return imageUrl;
+    const [, base, file] = match;
+    return `${base}/api/images/thumb.php?f=${encodeURIComponent(file)}&w=${width}`;
+  } catch {
+    return imageUrl;
+  }
+}
+
 export default function Gallery() {
   const navigate = useNavigate();
   const [images, setImages] = useState([]);
@@ -198,8 +215,10 @@ export default function Gallery() {
                       <Trash2 className="w-4 h-4" />
                     </button>
                     <img
-                      src={img.image_url}
+                      src={galleryThumb(img.image_url)}
                       alt={img.prompt}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full aspect-square object-cover"
                     />
                     {img.prompt && (

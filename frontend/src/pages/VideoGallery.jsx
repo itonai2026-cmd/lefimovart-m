@@ -207,7 +207,14 @@ export default function VideoGallery() {
                     <Trash2 className="w-4 h-4" />
                   </button>
                   {video.status === 'completed' && video.video_url ? (
-                    <video controls className="w-full h-full object-cover" src={video.video_url}></video>
+                    <video
+                      controls
+                      preload="metadata"
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover"
+                      src={video.video_url}
+                    ></video>
                   ) : video.status === 'failed' ? (
                     <div className="text-center p-4">
                       <p className="text-red-400 font-bold text-sm">Failed</p>
