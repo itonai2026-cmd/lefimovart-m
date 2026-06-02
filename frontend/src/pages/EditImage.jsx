@@ -8,7 +8,6 @@ import EditFilterBar from "../components/edit/EditFilterBar";
 import EditFilterPanel from "../components/edit/EditFilterPanel";
 
 const API_BASE = "/wp/lefimovart/api";
-const AI_EDIT_COST = 4;
 const DEFAULT_CREDITS = 15;
 
 const SAVE_EXPORT_FORMATS = {
@@ -124,6 +123,7 @@ export default function EditImage() {
   const [saveFormat, setSaveFormat] = useState(readStoredSaveFormat);
   const [showSaveMenu, setShowSaveMenu] = useState(false);
   const [savedToGallery, setSavedToGallery] = useState(() => isStoredAppImage(initialUrl));
+  const [aiEditCost, setAiEditCost] = useState(3);
 
   const runOptimisticCredits = useCallback(async (nextValue, asyncFn) => {
     setCredits(nextValue);
@@ -134,6 +134,18 @@ export default function EditImage() {
       throw err;
     }
   }, [realCredits]);
+
+  useEffect(() => {
+    if (!imageUrl) return;
+    const isLocal = isStoredAppImage(imageUrl);
+    if (!isLocal) return;
+    fetch(`${API_BASE}/images/edit_cost.php?image_url=${encodeURIComponent(imageUrl)}`, {
+      headers: getAuthHeaders(),
+    })
+      .then((r) => r.json())
+      .then((data) => { if (data.ok && data.cost) setAiEditCost(data.cost); })
+      .catch(() => {});
+  }, [imageUrl]);
 
   useEffect(() => {
     if (!initialUrl) return;
@@ -479,7 +491,7 @@ export default function EditImage() {
     if (!imageUrl) return;
     if (activeFilter === "ai") {
       if (!aiPrompt.trim()) { toast.error("Enter a prompt first."); return; }
-      const cost = AI_EDIT_COST;
+      const cost = aiEditCost;
       if (credits === null || credits < cost) {
         toast.error("Not enough credits.");
         navigate("/buy-credits");
@@ -692,7 +704,7 @@ export default function EditImage() {
   const canApply = (() => {
     if (!imageUrl || pending || uploading || saving) return false;
     if (activeFilter === "ai") {
-      return aiPrompt.trim().length > 0 && credits !== null && credits >= AI_EDIT_COST;
+      return aiPrompt.trim().length > 0 && credits !== null && credits >= aiEditCost;
     }
     if (activeFilter === "adjust") return adjust.brightness !== 100 || adjust.contrast !== 100 || adjust.saturation !== 100;
     if (activeFilter === "blur") return blur !== 0;
@@ -832,7 +844,7 @@ export default function EditImage() {
           <EditFilterPanel
             activeFilter={activeFilter}
             imageUrl={imageUrl}
-            aiEditCost={AI_EDIT_COST}
+            aiEditCost={aiEditCost}
             credits={credits}
             aiPrompt={aiPrompt}
             setAiPrompt={setAiPrompt}
