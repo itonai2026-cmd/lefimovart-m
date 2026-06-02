@@ -12,7 +12,7 @@ if (!$user) { json_response(['error' => 'Unauthorized'], 401); }
 global $pdo;
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $stmt = $pdo->prepare("SELECT id, prompt, model_used, status, video_url, error_message, created_at FROM videos WHERE user_email = ? AND (flagged IS NULL OR flagged = 0 OR flagged = '' OR flagged = '0') ORDER BY created_at DESC LIMIT 50");
+    $stmt = $pdo->prepare("SELECT id, prompt, model_used, status, video_url, thumbnail_url, error_message, created_at FROM videos WHERE user_email = ? AND (flagged IS NULL OR flagged = 0 OR flagged = '' OR flagged = '0') ORDER BY created_at DESC LIMIT 50");
     $stmt->execute([$user['email']]);
     $videos = $stmt->fetchAll();
     json_response(['ok' => true, 'videos' => $videos]);

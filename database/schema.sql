@@ -32,6 +32,7 @@ CREATE TABLE generated_images (
     user_id INT NOT NULL,
     user_email VARCHAR(255) NOT NULL,
     image_url VARCHAR(512) NULL,
+    thumbnail_url VARCHAR(512) NULL,
     prompt TEXT NOT NULL,
     resolution VARCHAR(20) NOT NULL DEFAULT '1024',
     status VARCHAR(20) NOT NULL DEFAULT 'ready',
