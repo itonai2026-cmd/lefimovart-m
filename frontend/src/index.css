@@ -20,17 +20,17 @@
 }
 
 .dark {
-  --background: 240 53% 10%;
+  --background: 220 50% 8%;
   --foreground: 210 40% 98%;
-  --card: 218 46% 13%;
+  --card: 218 40% 12%;
   --card-foreground: 210 40% 98%;
-  --border: 250 40% 28%;
-  --input: 218 39% 16%;
+  --border: 218 30% 22%;
+  --input: 218 35% 16%;
   --primary: 262 83% 58%;
-  --primary-foreground: 240 53% 10%;
-  --muted: 218 39% 16%;
+  --primary-foreground: 220 50% 8%;
+  --muted: 218 35% 16%;
   --muted-foreground: 215 20% 65%;
-  --accent: 250 40% 28%;
+  --accent: 262 83% 58%;
   --accent-foreground: 210 40% 98%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 210 40% 98%;
@@ -43,4 +43,20 @@ body {
   min-height: 100vh;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Dark-mode select/option styling */
+.dark select {
+  color-scheme: dark;
+}
+.dark select option {
+  background-color: #111b2e;
+  color: #e2e8f0;
+}
+.dark select option:checked {
+  background-color: #6d28d9;
+  color: #ffffff;
+}
+.dark select option:hover {
+  background-color: #4c1d95;
 }
