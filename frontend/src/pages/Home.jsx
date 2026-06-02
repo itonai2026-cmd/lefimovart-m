@@ -70,9 +70,9 @@ export default function Home() {
         <Settings className="w-5 h-5" />
       </button>
 
-      <div className="relative z-10 text-center max-w-md mx-auto space-y-12">
+      <div className="relative z-10 text-center max-w-md mx-auto space-y-6">
         {/* Header */}
-        <div className="space-y-4">
+        <div className="space-y-2">
           <AppLogo className="w-28 h-28 sm:w-32 sm:h-32" />
           <h1 className="text-4xl sm:text-5xl font-bold text-indigo-600 dark:text-violet-400 tracking-widest">
             LefiMovArt
@@ -82,6 +82,9 @@ export default function Home() {
           </p>
           <p className="text-sm text-slate-500 dark:text-slate-500">
             Create stunning AI images and videos with a few clicks.
+          </p>
+          <p className="text-xs text-slate-600 dark:text-slate-400">
+            Only AI operations consume credits.
           </p>
         </div>
 
@@ -145,9 +148,6 @@ export default function Home() {
         <div className="rounded-xl bg-white/10 dark:bg-slate-800/50 backdrop-blur-sm border border-white/20 dark:border-slate-700 p-4">
           <p className="text-sm text-slate-700 dark:text-slate-300">
             <span className="font-bold text-indigo-600 dark:text-violet-400">{user?.credits || 0} 🪙</span> Available
-          </p>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-            Only AI operations consume credits
           </p>
           <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
             You only pay for what you use — no subscriptions!
