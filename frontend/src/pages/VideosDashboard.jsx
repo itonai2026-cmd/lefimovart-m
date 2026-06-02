@@ -636,11 +636,11 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery, initialRefImage,
             </button>
 
             {/* Animated spinner / status icon */}
-            <div className="relative w-24 h-24 mx-auto mb-6">
+            <div className="relative w-36 h-36 mx-auto mb-6">
               {overlayStatus === 'processing' && (
                 <>
                   <div className="absolute inset-0 rounded-full border-4 border-violet-200 dark:border-violet-900/50" />
-                  <svg className="absolute inset-0 w-24 h-24 animate-spin" style={{ animationDuration: '2.5s' }} viewBox="0 0 96 96">
+                  <svg className="absolute inset-0 w-36 h-36 animate-spin" style={{ animationDuration: '2.5s' }} viewBox="0 0 144 144">
                     <defs>
                       <linearGradient id="spinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stopColor="#8b5cf6" />
@@ -648,27 +648,27 @@ function GenerateVideoTab({ credits, setCredits, onGoToGallery, initialRefImage,
                         <stop offset="100%" stopColor="#a78bfa" stopOpacity="0" />
                       </linearGradient>
                     </defs>
-                    <circle cx="48" cy="48" r="44" fill="none" stroke="url(#spinGrad)" strokeWidth="4" strokeLinecap="round" strokeDasharray="200 80" />
+                    <circle cx="72" cy="72" r="66" fill="none" stroke="url(#spinGrad)" strokeWidth="4" strokeLinecap="round" strokeDasharray="300 120" />
                   </svg>
-                  <div className="absolute inset-3 rounded-full bg-gradient-to-br from-violet-500/20 to-indigo-500/20 animate-pulse flex items-center justify-center">
-                    <img src="/wp/lefimovart/lefi-video-logo.png" alt="Video Generation" className="w-10 h-10 rounded-full object-contain" />
+                  <div className="absolute inset-[1.125rem] rounded-full bg-gradient-to-br from-violet-500/20 to-indigo-500/20 animate-pulse flex items-center justify-center">
+                    <img src="/wp/lefimovart/lefi-video-logo.png" alt="Video Generation" className="w-[3.75rem] h-[3.75rem] rounded-full object-contain" />
                   </div>
                   <div className="absolute inset-0 animate-spin" style={{ animationDuration: '4s' }}>
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-0.5 w-2.5 h-2.5 rounded-full bg-violet-500 shadow-lg shadow-violet-500/50" />
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-0.5 w-4 h-4 rounded-full bg-violet-500 shadow-lg shadow-violet-500/50" />
                   </div>
                   <div className="absolute inset-0 animate-spin" style={{ animationDuration: '6s', animationDirection: 'reverse' }}>
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-0.5 w-2 h-2 rounded-full bg-indigo-400 shadow-lg shadow-indigo-400/50" />
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-0.5 w-3 h-3 rounded-full bg-indigo-400 shadow-lg shadow-indigo-400/50" />
                   </div>
                 </>
               )}
               {overlayStatus === 'completed' && (
-                <div className="w-24 h-24 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                  <CheckCircle2 className="w-12 h-12 text-emerald-500" />
+                <div className="w-36 h-36 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                  <CheckCircle2 className="w-[4.5rem] h-[4.5rem] text-emerald-500" />
                 </div>
               )}
               {overlayStatus === 'failed' && (
-                <div className="w-24 h-24 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                  <AlertCircle className="w-12 h-12 text-red-500" />
+                <div className="w-36 h-36 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                  <AlertCircle className="w-[4.5rem] h-[4.5rem] text-red-500" />
                 </div>
               )}
             </div>
