@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import AppLogo from "../components/AppLogo";
 import Layout from "../components/Layout";
 import { useAuth } from "../lib/AuthContext";
+import itonaiLogo from "../assets/itonai-logo.png";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -87,13 +88,25 @@ export default function SettingsPage() {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white mb-6 px-4 py-4 rounded-2xl dark:bg-slate-900 shadow-lg shadow-violet-500/10 border border-slate-100 dark:border-slate-800 flex items-center gap-4"
+          className="bg-white mb-6 px-4 py-4 rounded-2xl dark:bg-slate-900 shadow-lg shadow-violet-500/10 border border-slate-100 dark:border-slate-800 flex items-center gap-3"
         >
-          <AppLogo className="w-14 h-14 rounded-xl" />
-          <p className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">LefiMovArt</p>
-          <div className="ml-auto text-right">
-            <p className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">ITonAI</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">lefi.itonai.ro</p>
+          <AppLogo className="w-14 h-14 rounded-xl shrink-0" />
+          <div className="text-left leading-tight">
+            <p className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">LefiMovArt</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">V1.1.0</p>
+          </div>
+          <div className="ml-auto flex items-center gap-3">
+            <div className="text-right leading-tight">
+              <p className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">ITonAI</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">lefi.itonai.ro</p>
+            </div>
+            <img
+              src={itonaiLogo}
+              alt="ITonAI logo"
+              className="w-14 h-14 rounded-xl object-contain bg-white p-1 shrink-0"
+              loading="eager"
+              decoding="async"
+            />
           </div>
         </motion.div>
 
