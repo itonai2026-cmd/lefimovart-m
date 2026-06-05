@@ -28,43 +28,34 @@ export default function BuyCredits() {
   const [nativePrices, setNativePrices] = useState({});
   const [useGooglePlayBilling, setUseGooglePlayBilling] = useState(false);
 
-  const plans = [
-    { id: 'bronze', name: 'Bronze', credits: 16, price: '€2.99', icon: '/wp/lefimovart/icons/128_Bronze.png' },
-    { id: 'silver', name: 'Silver', credits: 34, price: '€5.99', icon: '/wp/lefimovart/icons/128_Silver.png' },
-    { id: 'gold', name: 'Gold', credits: 65, price: '€9.99', icon: '/wp/lefimovart/icons/128_Gold.png' },
-    { id: 'diamond', name: 'Diamond', credits: 134, price: '€19.99', icon: '/wp/lefimovart/icons/128_Diamond.png' },
-    { id: 'rhodium', name: 'Rhodium', credits: 204, price: '€29.99', icon: '/wp/lefimovart/icons/128_Rhodium.png' },
-  ];
+  // Verificăm dacă suntem pe Android bazându-ne pe UserAgent ca metodă alternativă dacă Capacitor bridge e lent
+  const isAndroidUA = () => /Android/i.test(window.navigator.userAgent);
 
   useEffect(() => {
     const initBilling = async () => {
       console.log("Initializing billing check...");
       const platform = Capacitor.getPlatform();
-      console.log("Current platform detected by Capacitor:", platform);
+      console.log("Capacitor Platform:", platform);
+      console.log("User Agent is Android:", isAndroidUA());
 
-      const isAndroid = platform === 'android';
+      // Forțăm Android dacă ORICARE dintre metode confirmă platforma
+      const isAndroid = platform === 'android' || isAndroidUA();
+
       if (isAndroid) {
         try {
-          console.log("Platform is Android, checking for billing support...");
+          // Încercăm să vedem dacă pluginul răspunde
           const billing = await NativePurchases.isBillingSupported();
           console.log("Billing support result:", billing);
 
           if (billing.isBillingSupported) {
-            console.log("Google Play Billing supported, loading prices.");
             setUseGooglePlayBilling(true);
             await loadGooglePlayPrices();
-            return;
-          } else {
-            console.warn("Google Play Billing NOT supported on this device/configuration.");
           }
         } catch (e) {
-          console.error("Native billing support check failed with error:", e);
+          console.error("Native billing check failed:", e);
         }
-      } else {
-        console.log("Platform is NOT Android (according to Capacitor), falling back to Stripe check.");
       }
 
-      // If not android or billing not supported, check for stripe redirect
       const sessionId = searchParams.get('session_id');
       if (sessionId) {
         verifyPayment(sessionId);
@@ -126,69 +117,79 @@ export default function BuyCredits() {
   };
 
   const buyWithGooglePlay = async (plan) => {
+    console.log("Starting Google Play Purchase for plan:", plan);
     const productId = googlePlayProducts[plan];
     const appAccountToken = await hashAppAccountToken(user.id);
-    const transaction = await NativePurchases.purchaseProduct({
-      productIdentifier: productId,
-      productType: PURCHASE_TYPE.INAPP,
-      appAccountToken,
-      isConsumable: false,
-      autoAcknowledgePurchases: false,
-    });
 
-    if (transaction.purchaseState && transaction.purchaseState !== '1') {
-      throw new Error('Purchase is still pending in Google Play');
+    try {
+      const transaction = await NativePurchases.purchaseProduct({
+        productIdentifier: productId,
+        productType: PURCHASE_TYPE.INAPP,
+        appAccountToken,
+        isConsumable: false,
+        autoAcknowledgePurchases: false,
+      });
+
+      console.log("Transaction result:", transaction);
+
+      if (transaction.purchaseState && transaction.purchaseState !== '1') {
+        throw new Error('Purchase is still pending in Google Play');
+      }
+
+      if (!transaction.purchaseToken) {
+        throw new Error('Google Play did not return a purchase token');
+      }
+
+      const res = await fetch('/wp/lefimovart/api/payments/verify_google_play.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          plan,
+          product_id: transaction.productIdentifier || productId,
+          purchase_token: transaction.purchaseToken,
+          order_id: transaction.orderId,
+          app_account_token: appAccountToken,
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || 'Google Play payment could not be confirmed');
+      }
+
+      if (data.already_processed) {
+        toast.info('Purchase already processed. Your credits are already in your balance.');
+      } else {
+        toast.success(`Purchase successful! ${data.credits} 🪙 added.`);
+      }
+
+      await refreshUser();
+    } catch (err) {
+      console.error("Google Play Purchase Error:", err);
+      throw err;
     }
-
-    if (!transaction.purchaseToken) {
-      throw new Error('Google Play did not return a purchase token');
-    }
-
-    const res = await fetch('/wp/lefimovart/api/payments/verify_google_play.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify({
-        plan,
-        product_id: transaction.productIdentifier || productId,
-        purchase_token: transaction.purchaseToken,
-        order_id: transaction.orderId,
-        app_account_token: appAccountToken,
-      })
-    });
-
-    const data = await res.json();
-    if (!res.ok || !data.ok) {
-      throw new Error(data.error || 'Google Play payment could not be confirmed');
-    }
-
-    if (data.already_processed) {
-      toast.info('Purchase already processed. Your credits are already in your balance.');
-    } else {
-      toast.success(`Purchase successful! ${data.credits} 🪙 added.`);
-    }
-
-    await refreshUser();
   };
 
   const handleBuyCredits = async (plan) => {
     setLoading(plan);
     try {
-      const isAndroid = Capacitor.getPlatform() === 'android';
+      const platform = Capacitor.getPlatform();
+      const isAndroid = platform === 'android' || isAndroidUA();
 
-      // Dacă suntem pe Android, FORȚĂM calea Google Play.
-      // Nu permitem fallback la Stripe pentru a respecta politicile Play Store.
+      console.log("handleBuyCredits - Platform:", platform);
+      console.log("handleBuyCredits - isAndroid (incl UA):", isAndroid);
+
       if (isAndroid) {
-        console.log("Android detected: forcing Google Play path.");
+        console.log("FORCING GOOGLE PLAY PATH");
         await buyWithGooglePlay(plan);
         setLoading(null);
         return;
       }
 
-      // Doar pe web/iOS (non-Android) folosim Stripe
-      console.log("Non-Android platform: using Stripe.");
+      console.log("Using Stripe path (non-android)");
       const res = await fetch('/wp/lefimovart/api/payments/create_checkout.php', {
         method: 'POST',
         headers: {
@@ -201,11 +202,19 @@ export default function BuyCredits() {
       if (!data.ok) throw new Error(data.error);
       window.location.href = data.checkout_url;
     } catch (e) {
-      console.error("Purchase error:", e);
-      toast.error(e.message || 'Failed to start checkout');
+      console.error("Final catch error:", e);
+      toast.error(e.message || 'Error processing purchase');
       setLoading(null);
     }
   };
+
+  const plans = [
+    { id: 'bronze', name: 'Bronze', credits: 16, price: '€2.99', icon: '/wp/lefimovart/icons/128_Bronze.png' },
+    { id: 'silver', name: 'Silver', credits: 34, price: '€5.99', icon: '/wp/lefimovart/icons/128_Silver.png' },
+    { id: 'gold', name: 'Gold', credits: 65, price: '€9.99', icon: '/wp/lefimovart/icons/128_Gold.png' },
+    { id: 'diamond', name: 'Diamond', credits: 134, price: '€19.99', icon: '/wp/lefimovart/icons/128_Diamond.png' },
+    { id: 'rhodium', name: 'Rhodium', credits: 204, price: '€29.99', icon: '/wp/lefimovart/icons/128_Rhodium.png' },
+  ];
 
   return (
     <div className="min-h-screen bg-background p-6">
