@@ -39,7 +39,7 @@ export const IMAGE_MODELS = {
   },
   gpt_image_2: {
     name: 'GPT Image 2',
-    description: 'Assets with text, UI visuals, fine detail. OpenAI premium model.',
+    description: 'Assets with text, UI visuals, fine detail. Served through Fal.AI.',
     tier: 'high',
     supports_editing: true,
     cost_table: {

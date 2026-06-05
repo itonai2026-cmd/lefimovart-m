@@ -2,7 +2,8 @@
 
 /**
  * Fal.ai image generation helpers.
- * Supports FLUX.1 [dev], Nano Banana Pro, and GPT Image 2.
+ * Supports the primary Fal.ai image models. OpenAI is handled separately as
+ * an emergency fallback when Fal.ai fails.
  */
 
 function fal_generate_image(array $config, string $prompt, string $format, string $renderQuality, string $referenceImageUrl = ''): string {
@@ -51,7 +52,7 @@ function fal_generate_image(array $config, string $prompt, string $format, strin
                 ['image_url' => $fullImageUrl, 'task_type' => 'subject'],
             ];
         }
-        // GPT Image 2 uses image_urls in the same endpoint
+        // GPT Image 2 is still called through Fal.AI; OpenAI direct is fallback only.
         elseif (strpos($endpoint, 'gpt-image') !== false) {
             $payload['image_urls'] = [$fullImageUrl];
         }

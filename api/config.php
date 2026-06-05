@@ -72,12 +72,13 @@ define('OPENAI_API_KEY', getenv('OPENAI_API_KEY') ?: '');
 define('OPENAI_IMAGE_MODEL', getenv('OPENAI_IMAGE_MODEL') ?: 'gpt-image-1.5');
 define('FAL_AI_API_KEY', getenv('FAL_AI_API_KEY') ?: '');
 define('FAL_AI_BASE_URL', 'https://queue.fal.run');
+define('DEFAULT_IMAGE_MODEL', getenv('DEFAULT_IMAGE_MODEL') ?: 'flux_dev');
 
 // ─── Image Models ─────────────────────────────────────────────────────────
 // cost_table: credits indexed by [format][quality]
 // FLUX.1 [dev]        $0.025/megapixel  (Black Forest Labs)
 // Nano Banana Pro     $0.15/image std, $0.30/image 4K  (Google)
-// GPT Image 2         ~$0.01–$0.41/image token-based   (OpenAI via fal.ai)
+// GPT Image 2         ~$0.01–$0.41/image token-based   (OpenAI via Fal.AI)
 $IMAGE_MODELS_CONFIG = [
     'flux_dev' => [
         'name'             => 'FLUX.1 [dev]',
@@ -133,7 +134,7 @@ $IMAGE_MODELS_CONFIG = [
     ],
     'gpt_image_2' => [
         'name'             => 'GPT Image 2',
-        'description'      => 'Assets with text, UI visuals, fine detail. OpenAI premium model.',
+        'description'      => 'Assets with text, UI visuals, fine detail. OpenAI model served through Fal.AI.',
         'tier'             => 'high',
         'provider'         => 'fal',
         'api_endpoint'     => 'https://fal.run/openai/gpt-image-2',

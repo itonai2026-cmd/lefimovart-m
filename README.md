@@ -7,7 +7,7 @@ Aplicație full-stack pentru generare și editare de imagini + generare video cu
 - **Frontend:** React SPA (Vite) + TailwindCSS + shadcn/ui
 - **Backend:** PHP REST API (LiteSpeed)
 - **Database:** MySQL/MariaDB (`r133813iton_ai_video`)
-- **AI imagini/editare:** OpenAI Images API
+- **AI imagini/editare:** Fal.AI ca provider principal; OpenAI este folosit numai ca rezervă dacă Fal.AI eșuează
 - **AI video:** FAL.ai
 - **Autentificare:** JWT + Google OAuth
 - **Plăți:** Stripe pe web, Google Play Billing în aplicația Android împachetată
@@ -23,19 +23,20 @@ mysql -h localhost -u r133813iton_dacos -p r133813iton_ai_video < database/schem
 ### 2. Environment
 Editează `.env` și adaugă credențialele:
 - `DB_*` (deja completat)
-- `OPENAI_API_KEY` pentru generare și editare imagini
-- `OPENAI_IMAGE_MODEL=gpt-image-1.5` (modelul recomandat curent pentru imagini)
-- `FAL_AI_API_KEY` pentru generare video
+- `FAL_AI_API_KEY` pentru generare/editare imagini și generare video
+- `OPENAI_API_KEY` doar ca rezervă pentru generare/editare imagini când Fal.AI dă eroare
+- `OPENAI_IMAGE_MODEL=gpt-image-1.5` pentru fallback-ul OpenAI
 - `GOOGLE_CLIENT_ID` și `GOOGLE_CLIENT_SECRET`
 - `STRIPE_SECRET_KEY` (pentru plăți web)
 - `STRIPE_PRICE_*` pentru fiecare plan din catalogul Stripe
 - `GOOGLE_PLAY_*` pentru verificarea achizițiilor Android în Google Play
 
-Pentru OpenAI, creează un **Project API key** în dashboard-ul OpenAI, din `API keys`, apoi adaugă cheia numai în `.env` pe server:
+Pentru fallback-ul OpenAI, creează un **Project API key** în dashboard-ul OpenAI, din `API keys`, apoi adaugă cheia numai în `.env` pe server. Aplicația încearcă întâi Fal.AI; OpenAI este apelat numai dacă Fal.AI returnează eroare:
 
 ```env
 OPENAI_API_KEY=sk-proj-...
 OPENAI_IMAGE_MODEL=gpt-image-1.5
+DEFAULT_IMAGE_MODEL=flux_dev
 ```
 
 Cheia este utilizată numai de endpoint-urile PHP din `api/images/`; nu trebuie introdusă în variabile Vite sau în codul React.
@@ -80,7 +81,7 @@ Copiază directoarele `api/`, `database/` și `frontend/dist/`, plus `.htaccess`
 
 ## 📱 Funcționalități
 
-✅ Generare și editare imagini cu OpenAI
+✅ Generare și editare imagini prin Fal.AI, cu OpenAI doar ca rezervă la eroare
 ✅ Formate imagine 1:1, 3:2, 2:3, 16:9 și 9:16, cu output Standard/HiRes
 ✅ Editare imagini (crop, rotate, blur, text, stickere, filtru AI)
 ✅ Generare video cu AI (3 modele: Wan, LTX, Kling)
@@ -168,9 +169,10 @@ DB_NAME=r133813iton_ai_video
 DB_USER=r133813iton_dacos
 DB_PASS=***
 
-FAL_AI_API_KEY=***
 OPENAI_API_KEY=sk-proj-***
 OPENAI_IMAGE_MODEL=gpt-image-1.5
+DEFAULT_IMAGE_MODEL=flux_dev
+FAL_AI_API_KEY=***
 GOOGLE_CLIENT_ID=***
 GOOGLE_CLIENT_SECRET=***
 STRIPE_SECRET_KEY=sk_live_***

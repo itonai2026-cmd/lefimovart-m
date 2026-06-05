@@ -3,6 +3,7 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/openai_images.php';
 require_once __DIR__ . '/../includes/fal_images.php';
+require_once __DIR__ . '/../includes/image_requests.php';
 
 set_cors_headers();
 
@@ -50,52 +51,22 @@ if ($user['credits'] < $cost) {
 }
 
 try {
-  $fullImageUrl = fal_resolve_image_url($image_url);
+  try {
+    $image_data = fal_generate_image($modelConfig, $prompt, $format, $renderQuality, $image_url);
+  } catch (RuntimeException $falError) {
+    error_log('Fal.ai image edit failed; trying OpenAI fallback: ' . $falError->getMessage());
 
-  $payload = [
-    'prompt' => $prompt,
-    'reference_images' => [
-      ['image_url' => $fullImageUrl, 'task_type' => 'subject'],
-    ],
-    'output_format' => 'png',
-  ];
-
-  $sizeValue = $modelConfig['size_map'][$format][$renderQuality] ?? '1:1';
-  $payload[$modelConfig['size_param']] = $sizeValue;
-
-  if ($renderQuality === 'hires' && !empty($modelConfig['hires_params'])) {
-    $payload = array_merge($payload, $modelConfig['hires_params']);
+    try {
+      $legacyOptions = image_generation_options();
+      $openAiSize = $legacyOptions[$format]['api_size'] ?? $legacyOptions['1:1']['api_size'];
+      $image_data = openai_edit_image($localPath, $prompt, $openAiSize);
+    } catch (RuntimeException $openAiError) {
+      throw new RuntimeException(
+        'Fal.ai failed: ' . $falError->getMessage() . ' OpenAI fallback failed: ' . $openAiError->getMessage()
+      );
+    }
   }
 
-  $ch = curl_init($modelConfig['api_endpoint']);
-  curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST           => true,
-    CURLOPT_POSTFIELDS     => json_encode($payload),
-    CURLOPT_HTTPHEADER     => [
-      'Content-Type: application/json',
-      'Authorization: Key ' . FAL_AI_API_KEY,
-    ],
-    CURLOPT_TIMEOUT        => 180,
-  ]);
-  $response = curl_exec($ch);
-  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-  $curlError = curl_error($ch);
-  curl_close($ch);
-
-  if ($httpCode < 200 || $httpCode >= 300 || !$response) {
-    $result = json_decode((string)$response, true) ?: [];
-    $msg = $result['detail'] ?? $result['error']['message'] ?? $curlError ?: 'Fal.ai edit request failed.';
-    throw new RuntimeException($msg);
-  }
-
-  $result = json_decode($response, true);
-  $resultImageUrl = $result['images'][0]['url'] ?? '';
-  if ($resultImageUrl === '') {
-    throw new RuntimeException('Fal.ai did not return an edited image.');
-  }
-
-  $image_data = fal_download_image($resultImageUrl);
   $edited_url = save_image_bytes($image_data, 'edited_');
 
   $pdo->beginTransaction();
