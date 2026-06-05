@@ -21,6 +21,14 @@ $referenceImageUrl = trim($input['reference_image_url'] ?? '');
 
 if ($prompt === '') { json_response(['error' => 'Prompt required'], 400); }
 
+global $IMAGE_MODELS_CONFIG;
+if ($model === '') {
+    $model = defined('DEFAULT_IMAGE_MODEL') ? DEFAULT_IMAGE_MODEL : 'flux_dev';
+}
+if (!isset($IMAGE_MODELS_CONFIG[$model])) {
+    json_response(['error' => 'Invalid image model'], 400);
+}
+
 try {
     $selection = image_generation_selection($format, $renderQuality, $model);
 } catch (InvalidArgumentException $e) {

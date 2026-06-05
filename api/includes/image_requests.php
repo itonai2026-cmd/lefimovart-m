@@ -33,6 +33,10 @@ function image_generation_options(): array {
 function image_generation_selection(string $format, string $renderQuality, string $model = ''): array {
     global $IMAGE_MODELS_CONFIG;
 
+    if ($model === '') {
+        $model = defined('DEFAULT_IMAGE_MODEL') ? DEFAULT_IMAGE_MODEL : 'flux_dev';
+    }
+
     // When a known image model is specified, use its cost_table
     if ($model !== '' && isset($IMAGE_MODELS_CONFIG[$model])) {
         $cfg  = $IMAGE_MODELS_CONFIG[$model];

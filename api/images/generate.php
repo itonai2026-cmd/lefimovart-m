@@ -48,10 +48,16 @@ $referenceImageUrl = $_SESSION['image_reference_' . $requestId] ?? '';
 unset($_SESSION['image_reference_' . $requestId]);
 
 try {
-    $useFal = ($model !== '' && isset($IMAGE_MODELS_CONFIG[$model]));
+    if ($model === '' || !isset($IMAGE_MODELS_CONFIG[$model])) {
+        $model = defined('DEFAULT_IMAGE_MODEL') ? DEFAULT_IMAGE_MODEL : 'flux_dev';
+    }
+    if (!isset($IMAGE_MODELS_CONFIG[$model])) {
+        throw new RuntimeException('Default Fal.ai image model is not configured.');
+    }
 
-    if ($useFal) {
-        $modelConfig = $IMAGE_MODELS_CONFIG[$model];
+    $modelConfig = $IMAGE_MODELS_CONFIG[$model];
+
+    try {
         $image_data = fal_generate_image(
             $modelConfig,
             $request['prompt'],
@@ -59,13 +65,20 @@ try {
             $request['render_quality'],
             $referenceImageUrl
         );
-    } else {
+    } catch (RuntimeException $falError) {
+        error_log('Fal.ai image generation failed; trying OpenAI fallback: ' . $falError->getMessage());
         $quality = 'medium';
-        $image_data = $referenceImageUrl !== ''
-            ? openai_edit_image(local_image_path($referenceImageUrl), $request['prompt'], $selection['api_size'])
-            : openai_generate_image($request['prompt'], $quality, $selection['api_size']);
-        if ($selection['resolution'] !== $selection['api_size']) {
-            $image_data = render_image_dimensions($image_data, $selection['width'], $selection['height']);
+        try {
+            $image_data = $referenceImageUrl !== ''
+                ? openai_edit_image(local_image_path($referenceImageUrl), $request['prompt'], $selection['api_size'])
+                : openai_generate_image($request['prompt'], $quality, $selection['api_size']);
+            if ($selection['resolution'] !== $selection['api_size']) {
+                $image_data = render_image_dimensions($image_data, $selection['width'], $selection['height']);
+            }
+        } catch (RuntimeException $openAiError) {
+            throw new RuntimeException(
+                'Fal.ai failed: ' . $falError->getMessage() . ' OpenAI fallback failed: ' . $openAiError->getMessage()
+            );
         }
     }
 
