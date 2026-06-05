@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LefiMovArt</string>
+    <string name="title_activity_main">LefiMovArt</string>
+    <string name="package_name">ro.itonai.lefimovart</string>
+    <string name="custom_url_scheme">ro.itonai.lefimovart</string>
+</resources>

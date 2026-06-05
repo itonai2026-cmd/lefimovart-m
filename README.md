@@ -10,7 +10,7 @@ Aplicație full-stack pentru generare și editare de imagini + generare video cu
 - **AI imagini/editare:** OpenAI Images API
 - **AI video:** FAL.ai
 - **Autentificare:** JWT + Google OAuth
-- **Plăți:** Stripe
+- **Plăți:** Stripe pe web, Google Play Billing în aplicația Android împachetată
 - **Procesare imagine:** PHP GD pentru output HiRes și formatele 16:9 / 9:16
 
 ## 📦 Instalare
@@ -27,8 +27,9 @@ Editează `.env` și adaugă credențialele:
 - `OPENAI_IMAGE_MODEL=gpt-image-1.5` (modelul recomandat curent pentru imagini)
 - `FAL_AI_API_KEY` pentru generare video
 - `GOOGLE_CLIENT_ID` și `GOOGLE_CLIENT_SECRET`
-- `STRIPE_SECRET_KEY` (dacă vrei plăți)
+- `STRIPE_SECRET_KEY` (pentru plăți web)
 - `STRIPE_PRICE_*` pentru fiecare plan din catalogul Stripe
+- `GOOGLE_PLAY_*` pentru verificarea achizițiilor Android în Google Play
 
 Pentru OpenAI, creează un **Project API key** în dashboard-ul OpenAI, din `API keys`, apoi adaugă cheia numai în `.env` pe server:
 
@@ -75,6 +76,7 @@ Copiază directoarele `api/`, `database/` și `frontend/dist/`, plus `.htaccess`
 - `POST /api/payments/create_checkout.php` - Creare sesiune Stripe Checkout
 - `POST /api/payments/verify_stripe.php` - Verificare plata Stripe
 - `POST /api/payments/webhook.php` - Webhook Stripe `checkout.session.completed`
+- `POST /api/payments/verify_google_play.php` - Verificare Google Play purchase token și acordare credite Android
 
 ## 📱 Funcționalități
 
@@ -85,9 +87,46 @@ Copiază directoarele `api/`, `database/` și `frontend/dist/`, plus `.htaccess`
 ✅ Galerie imagini/video
 ✅ Autentificare email + Google OAuth
 ✅ Sistem de credite
-✅ Plăți Stripe (Bronze/Silver/Gold/Diamond/Rhodium)
+✅ Plăți Stripe pe web (Bronze/Silver/Gold/Diamond/Rhodium)
+✅ Google Play Billing pentru aplicația Android împachetată
 ✅ Mobile-responsive
 ✅ PWA support
+
+## 📱 Android wrapper cu Android Studio
+
+Aplicația mobilă folosește Capacitor ca wrapper WebView peste site-ul live:
+
+```text
+https://itonai.ro/wp/lefimovart/
+```
+
+Codul Android este în `frontend/android/` și poate fi deschis în Android Studio:
+
+```bash
+cd frontend
+npm install
+npm run android:sync
+npm run android:open
+```
+
+Pentru Play Store, creează produse consumabile de tip one-time product / in-app product cu aceleași ID-uri ca în `.env` și în frontend:
+
+```text
+credits_bronze
+credits_silver
+credits_gold
+credits_diamond
+credits_rhodium
+```
+
+În aplicația web normală rămâne Stripe. În aplicația Android, pagina `Buy Credits` detectează Capacitor Android și folosește Google Play Billing. După cumpărare, frontend-ul trimite `product_id`, `purchase_token`, `order_id` și planul la backend; backend-ul verifică achiziția prin Google Play Developer API, acordă creditele o singură dată și consumă produsul ca să poată fi cumpărat din nou.
+
+Pentru verificare server-side, creează în Google Cloud/Play Console un service account cu acces la Google Play Android Developer API și setează una dintre variante:
+
+```env
+GOOGLE_PLAY_SERVICE_ACCOUNT_JSON={"type":"service_account",...}
+GOOGLE_PLAY_SERVICE_ACCOUNT_FILE=/absolute/path/google-play-service-account.json
+```
 
 ## 🚀 Deploy pe Production
 
@@ -142,6 +181,14 @@ STRIPE_PRICE_SILVER=price_***
 STRIPE_PRICE_GOLD=price_***
 STRIPE_PRICE_DIAMOND=price_***
 STRIPE_PRICE_RHODIUM=price_***
+
+GOOGLE_PLAY_PACKAGE_NAME=ro.itonai.lefimovart
+GOOGLE_PLAY_SERVICE_ACCOUNT_JSON={"type":"service_account",...}
+GOOGLE_PLAY_PRODUCT_BRONZE=credits_bronze
+GOOGLE_PLAY_PRODUCT_SILVER=credits_silver
+GOOGLE_PLAY_PRODUCT_GOLD=credits_gold
+GOOGLE_PLAY_PRODUCT_DIAMOND=credits_diamond
+GOOGLE_PLAY_PRODUCT_RHODIUM=credits_rhodium
 ```
 
 Configurează în Stripe Dashboard webhook-ul către:

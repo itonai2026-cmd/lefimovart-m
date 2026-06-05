@@ -286,10 +286,23 @@ define('PLAN_PRICE_IDS', [
     'rhodium' => getenv('STRIPE_PRICE_RHODIUM') ?: '',
 ]);
 
+// ─── Google Play Billing ─────────────────────────────────────────────────
+define('GOOGLE_PLAY_PACKAGE_NAME', getenv('GOOGLE_PLAY_PACKAGE_NAME') ?: 'ro.itonai.lefimovart');
+define('GOOGLE_PLAY_SERVICE_ACCOUNT_JSON', getenv('GOOGLE_PLAY_SERVICE_ACCOUNT_JSON') ?: '');
+define('GOOGLE_PLAY_SERVICE_ACCOUNT_FILE', getenv('GOOGLE_PLAY_SERVICE_ACCOUNT_FILE') ?: '');
+define('GOOGLE_PLAY_PRODUCT_IDS', [
+    'bronze'  => getenv('GOOGLE_PLAY_PRODUCT_BRONZE') ?: 'credits_bronze',
+    'silver'  => getenv('GOOGLE_PLAY_PRODUCT_SILVER') ?: 'credits_silver',
+    'gold'    => getenv('GOOGLE_PLAY_PRODUCT_GOLD') ?: 'credits_gold',
+    'diamond' => getenv('GOOGLE_PLAY_PRODUCT_DIAMOND') ?: 'credits_diamond',
+    'rhodium' => getenv('GOOGLE_PLAY_PRODUCT_RHODIUM') ?: 'credits_rhodium',
+]);
+
 // ─── CORS Headers ────────────────────────────────────────────────────────
 function set_cors_headers() {
     $allowed_origins = [
         'https://itonai.ro',
+        'capacitor://localhost',
         'http://localhost:5173',
         'http://localhost:3000',
         'http://127.0.0.1:5173',

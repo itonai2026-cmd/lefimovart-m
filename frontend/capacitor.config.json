@@ -1,0 +1,17 @@
+{
+  "appId": "ro.itonai.lefimovart",
+  "appName": "LefiMovArt",
+  "webDir": "dist",
+  "server": {
+    "url": "https://itonai.ro/wp/lefimovart/",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "NativePurchases": {
+      "autoAcknowledgePurchases": false
+    }
+  }
+}
