@@ -5,8 +5,6 @@ import { NativePurchases, PURCHASE_TYPE } from '@capgo/native-purchases';
 import { useAuth } from '../lib/AuthContext';
 import { toast } from 'sonner';
 
-const isAndroidApp = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
-
 const googlePlayProducts = {
   bronze: 'credits_bronze',
   silver: 'credits_silver',
@@ -28,26 +26,43 @@ export default function BuyCredits() {
   const { logout, user, setUser } = useAuth();
   const [loading, setLoading] = useState(null);
   const [nativePrices, setNativePrices] = useState({});
-  const useGooglePlayBilling = isAndroidApp();
+  const [useGooglePlayBilling, setUseGooglePlayBilling] = useState(false);
 
-  const plans = [
-    { id: 'bronze', name: 'Bronze', credits: 16, price: '€2.99', icon: '/wp/lefimovart/icons/128_Bronze.png' },
-    { id: 'silver', name: 'Silver', credits: 34, price: '€5.99', icon: '/wp/lefimovart/icons/128_Silver.png' },
-    { id: 'gold', name: 'Gold', credits: 65, price: '€9.99', icon: '/wp/lefimovart/icons/128_Gold.png' },
-    { id: 'diamond', name: 'Diamond', credits: 134, price: '€19.99', icon: '/wp/lefimovart/icons/128_Diamond.png' },
-    { id: 'rhodium', name: 'Rhodium', credits: 204, price: '€29.99', icon: '/wp/lefimovart/icons/128_Rhodium.png' },
-  ];
+  // Verificăm dacă suntem pe Android bazându-ne pe UserAgent ca metodă alternativă dacă Capacitor bridge e lent
+  const isAndroidUA = () => /Android/i.test(window.navigator.userAgent);
 
   useEffect(() => {
-    if (useGooglePlayBilling) {
-      loadGooglePlayPrices();
-      return;
-    }
+    const initBilling = async () => {
+      console.log("Initializing billing check...");
+      const platform = Capacitor.getPlatform();
+      console.log("Capacitor Platform:", platform);
+      console.log("User Agent is Android:", isAndroidUA());
 
-    const sessionId = searchParams.get('session_id');
-    if (sessionId) {
-      verifyPayment(sessionId);
-    }
+      // Forțăm Android dacă ORICARE dintre metode confirmă platforma
+      const isAndroid = platform === 'android' || isAndroidUA();
+
+      if (isAndroid) {
+        try {
+          // Încercăm să vedem dacă pluginul răspunde
+          const billing = await NativePurchases.isBillingSupported();
+          console.log("Billing support result:", billing);
+
+          if (billing.isBillingSupported) {
+            setUseGooglePlayBilling(true);
+            await loadGooglePlayPrices();
+          }
+        } catch (e) {
+          console.error("Native billing check failed:", e);
+        }
+      }
+
+      const sessionId = searchParams.get('session_id');
+      if (sessionId) {
+        verifyPayment(sessionId);
+      }
+    };
+
+    initBilling();
   }, []);
 
   const refreshUser = async () => {
@@ -60,12 +75,6 @@ export default function BuyCredits() {
 
   const loadGooglePlayPrices = async () => {
     try {
-      const billing = await NativePurchases.isBillingSupported();
-      if (!billing.isBillingSupported) {
-        toast.error('Google Play Billing is not available on this device.');
-        return;
-      }
-
       const { products } = await NativePurchases.getProducts({
         productIdentifiers: Object.values(googlePlayProducts),
         productType: PURCHASE_TYPE.INAPP,
@@ -77,7 +86,7 @@ export default function BuyCredits() {
       });
       setNativePrices(prices);
     } catch (e) {
-      toast.error(e.message || 'Could not load Google Play products');
+      console.error("Could not load Google Play products:", e);
     }
   };
 
@@ -108,62 +117,79 @@ export default function BuyCredits() {
   };
 
   const buyWithGooglePlay = async (plan) => {
+    console.log("Starting Google Play Purchase for plan:", plan);
     const productId = googlePlayProducts[plan];
     const appAccountToken = await hashAppAccountToken(user.id);
-    const transaction = await NativePurchases.purchaseProduct({
-      productIdentifier: productId,
-      productType: PURCHASE_TYPE.INAPP,
-      appAccountToken,
-      isConsumable: false,
-      autoAcknowledgePurchases: false,
-    });
 
-    if (transaction.purchaseState && transaction.purchaseState !== '1') {
-      throw new Error('Purchase is still pending in Google Play');
+    try {
+      const transaction = await NativePurchases.purchaseProduct({
+        productIdentifier: productId,
+        productType: PURCHASE_TYPE.INAPP,
+        appAccountToken,
+        isConsumable: false,
+        autoAcknowledgePurchases: false,
+      });
+
+      console.log("Transaction result:", transaction);
+
+      if (transaction.purchaseState && transaction.purchaseState !== '1') {
+        throw new Error('Purchase is still pending in Google Play');
+      }
+
+      if (!transaction.purchaseToken) {
+        throw new Error('Google Play did not return a purchase token');
+      }
+
+      const res = await fetch('/wp/lefimovart/api/payments/verify_google_play.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          plan,
+          product_id: transaction.productIdentifier || productId,
+          purchase_token: transaction.purchaseToken,
+          order_id: transaction.orderId,
+          app_account_token: appAccountToken,
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || 'Google Play payment could not be confirmed');
+      }
+
+      if (data.already_processed) {
+        toast.info('Purchase already processed. Your credits are already in your balance.');
+      } else {
+        toast.success(`Purchase successful! ${data.credits} 🪙 added.`);
+      }
+
+      await refreshUser();
+    } catch (err) {
+      console.error("Google Play Purchase Error:", err);
+      throw err;
     }
-
-    if (!transaction.purchaseToken) {
-      throw new Error('Google Play did not return a purchase token');
-    }
-
-    const res = await fetch('/wp/lefimovart/api/payments/verify_google_play.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify({
-        plan,
-        product_id: transaction.productIdentifier || productId,
-        purchase_token: transaction.purchaseToken,
-        order_id: transaction.orderId,
-        app_account_token: appAccountToken,
-      })
-    });
-
-    const data = await res.json();
-    if (!res.ok || !data.ok) {
-      throw new Error(data.error || 'Google Play payment could not be confirmed');
-    }
-
-    if (data.already_processed) {
-      toast.info('Purchase already processed. Your credits are already in your balance.');
-    } else {
-      toast.success(`Purchase successful! ${data.credits} 🪙 added.`);
-    }
-
-    await refreshUser();
   };
 
   const handleBuyCredits = async (plan) => {
     setLoading(plan);
     try {
-      if (useGooglePlayBilling) {
+      const platform = Capacitor.getPlatform();
+      const isAndroid = platform === 'android' || isAndroidUA();
+
+      console.log("handleBuyCredits - Platform:", platform);
+      console.log("handleBuyCredits - isAndroid (incl UA):", isAndroid);
+
+      if (isAndroid) {
+        console.log("FORCING GOOGLE PLAY PATH");
         await buyWithGooglePlay(plan);
         setLoading(null);
         return;
       }
 
+      console.log("Using Stripe path (non-android)");
       const res = await fetch('/wp/lefimovart/api/payments/create_checkout.php', {
         method: 'POST',
         headers: {
@@ -176,10 +202,19 @@ export default function BuyCredits() {
       if (!data.ok) throw new Error(data.error);
       window.location.href = data.checkout_url;
     } catch (e) {
-      toast.error(e.message || 'Failed to start checkout');
+      console.error("Final catch error:", e);
+      toast.error(e.message || 'Error processing purchase');
       setLoading(null);
     }
   };
+
+  const plans = [
+    { id: 'bronze', name: 'Bronze', credits: 16, price: '€2.99', icon: '/wp/lefimovart/icons/128_Bronze.png' },
+    { id: 'silver', name: 'Silver', credits: 34, price: '€5.99', icon: '/wp/lefimovart/icons/128_Silver.png' },
+    { id: 'gold', name: 'Gold', credits: 65, price: '€9.99', icon: '/wp/lefimovart/icons/128_Gold.png' },
+    { id: 'diamond', name: 'Diamond', credits: 134, price: '€19.99', icon: '/wp/lefimovart/icons/128_Diamond.png' },
+    { id: 'rhodium', name: 'Rhodium', credits: 204, price: '€29.99', icon: '/wp/lefimovart/icons/128_Rhodium.png' },
+  ];
 
   return (
     <div className="min-h-screen bg-background p-6">
