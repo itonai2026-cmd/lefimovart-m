@@ -13,6 +13,100 @@ const googlePlayProducts = {
   rhodium: 'credits_rhodium',
 };
 
+const ANDROID_APP_USER_AGENT = 'LefiMovArtAndroid';
+const GOOGLE_PLAY_BILLING_UNAVAILABLE =
+  'Google Play Billing is not available in the Android app right now. Please install or update the app from Google Play and try again.';
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const getUserAgent = () => (typeof window === 'undefined' ? '' : window.navigator.userAgent);
+
+const isAndroidUserAgent = () => /Android/i.test(getUserAgent());
+
+const isAndroidAppUserAgent = () => getUserAgent().includes(ANDROID_APP_USER_AGENT);
+
+const getCapacitorPlatform = () => {
+  try {
+    return Capacitor.getPlatform();
+  } catch (e) {
+    console.error('Could not read Capacitor platform:', e);
+    return 'web';
+  }
+};
+
+const isNativeAndroidRuntime = () => {
+  if (typeof window === 'undefined') return false;
+
+  const globalCapacitor = window.Capacitor;
+  const globalPlatform = globalCapacitor?.getPlatform?.();
+
+  return (
+    getCapacitorPlatform() === 'android' ||
+    globalPlatform === 'android' ||
+    Boolean(window.androidBridge) ||
+    isAndroidUserAgent() ||
+    isAndroidAppUserAgent()
+  );
+};
+
+const hasNativePurchasesPlugin = () => {
+  if (typeof window === 'undefined') return false;
+
+  const globalCapacitor = window.Capacitor;
+  return Boolean(
+    Capacitor.isPluginAvailable?.('NativePurchases') ||
+    globalCapacitor?.isPluginAvailable?.('NativePurchases')
+  );
+};
+
+const getGooglePlayBillingStatus = async ({ attempts = 8, delayMs = 250 } = {}) => {
+  let lastStatus = {
+    platform: getCapacitorPlatform(),
+    isAndroidApp: isNativeAndroidRuntime(),
+    isPluginAvailable: hasNativePurchasesPlugin(),
+    isBillingSupported: false,
+    error: null,
+  };
+
+  if (!lastStatus.isAndroidApp) {
+    return lastStatus;
+  }
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const status = {
+      platform: getCapacitorPlatform(),
+      isAndroidApp: isNativeAndroidRuntime(),
+      isPluginAvailable: hasNativePurchasesPlugin(),
+      isBillingSupported: false,
+      error: null,
+    };
+
+    if (status.isPluginAvailable) {
+      try {
+        const billing = await NativePurchases.isBillingSupported();
+        status.isBillingSupported = Boolean(billing?.isBillingSupported);
+        lastStatus = status;
+
+        if (status.isBillingSupported) {
+          return status;
+        }
+      } catch (e) {
+        status.error = e;
+        lastStatus = status;
+        console.error('Native billing check failed:', e);
+      }
+    } else {
+      lastStatus = status;
+    }
+
+    if (attempt < attempts - 1) {
+      await sleep(delayMs);
+    }
+  }
+
+  return lastStatus;
+};
+
 const hashAppAccountToken = async (userId) => {
   const value = `lefimovart:${userId}`;
   const bytes = new TextEncoder().encode(value);
@@ -28,32 +122,21 @@ export default function BuyCredits() {
   const [nativePrices, setNativePrices] = useState({});
   const [useGooglePlayBilling, setUseGooglePlayBilling] = useState(false);
 
-  // Verificăm dacă suntem pe Android bazându-ne pe UserAgent ca metodă alternativă dacă Capacitor bridge e lent
-  const isAndroidUA = () => /Android/i.test(window.navigator.userAgent);
-
   useEffect(() => {
+    let isMounted = true;
+
     const initBilling = async () => {
-      console.log("Initializing billing check...");
-      const platform = Capacitor.getPlatform();
-      console.log("Capacitor Platform:", platform);
-      console.log("User Agent is Android:", isAndroidUA());
+      console.log('Initializing billing check...');
+      const billingStatus = await getGooglePlayBillingStatus();
+      console.log('Billing status:', billingStatus);
 
-      // Forțăm Android dacă ORICARE dintre metode confirmă platforma
-      const isAndroid = platform === 'android' || isAndroidUA();
+      if (!isMounted) return;
 
-      if (isAndroid) {
-        try {
-          // Încercăm să vedem dacă pluginul răspunde
-          const billing = await NativePurchases.isBillingSupported();
-          console.log("Billing support result:", billing);
+      const shouldUseGooglePlay = billingStatus.isAndroidApp && billingStatus.isBillingSupported;
+      setUseGooglePlayBilling(shouldUseGooglePlay);
 
-          if (billing.isBillingSupported) {
-            setUseGooglePlayBilling(true);
-            await loadGooglePlayPrices();
-          }
-        } catch (e) {
-          console.error("Native billing check failed:", e);
-        }
+      if (shouldUseGooglePlay) {
+        await loadGooglePlayPrices();
       }
 
       const sessionId = searchParams.get('session_id');
@@ -63,6 +146,10 @@ export default function BuyCredits() {
     };
 
     initBilling();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const refreshUser = async () => {
@@ -82,7 +169,11 @@ export default function BuyCredits() {
 
       const prices = {};
       products.forEach((product) => {
-        prices[product.identifier] = product.priceString;
+        const productId = product.identifier || product.productIdentifier;
+        const displayPrice = product.priceString || product.localizedPrice || product.price;
+        if (productId && displayPrice) {
+          prices[productId] = displayPrice;
+        }
       });
       setNativePrices(prices);
     } catch (e) {
@@ -126,17 +217,18 @@ export default function BuyCredits() {
         productIdentifier: productId,
         productType: PURCHASE_TYPE.INAPP,
         appAccountToken,
-        isConsumable: false,
+        isConsumable: true,
         autoAcknowledgePurchases: false,
       });
 
       console.log("Transaction result:", transaction);
 
-      if (transaction.purchaseState && transaction.purchaseState !== '1') {
+      if (transaction.purchaseState != null && String(transaction.purchaseState) !== '1') {
         throw new Error('Purchase is still pending in Google Play');
       }
 
-      if (!transaction.purchaseToken) {
+      const purchaseToken = transaction.purchaseToken || transaction.transactionId;
+      if (!purchaseToken) {
         throw new Error('Google Play did not return a purchase token');
       }
 
@@ -149,7 +241,7 @@ export default function BuyCredits() {
         body: JSON.stringify({
           plan,
           product_id: transaction.productIdentifier || productId,
-          purchase_token: transaction.purchaseToken,
+          purchase_token: purchaseToken,
           order_id: transaction.orderId,
           app_account_token: appAccountToken,
         })
@@ -176,14 +268,17 @@ export default function BuyCredits() {
   const handleBuyCredits = async (plan) => {
     setLoading(plan);
     try {
-      const platform = Capacitor.getPlatform();
-      const isAndroid = platform === 'android' || isAndroidUA();
+      const billingStatus = await getGooglePlayBillingStatus({
+        attempts: useGooglePlayBilling ? 1 : 8,
+      });
+      console.log('handleBuyCredits billing status:', billingStatus);
 
-      console.log("handleBuyCredits - Platform:", platform);
-      console.log("handleBuyCredits - isAndroid (incl UA):", isAndroid);
+      if (billingStatus.isAndroidApp) {
+        if (!billingStatus.isBillingSupported) {
+          throw new Error(GOOGLE_PLAY_BILLING_UNAVAILABLE);
+        }
 
-      if (isAndroid) {
-        console.log("FORCING GOOGLE PLAY PATH");
+        console.log('Using Google Play Billing path');
         await buyWithGooglePlay(plan);
         setLoading(null);
         return;
