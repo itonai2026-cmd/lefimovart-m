@@ -5,8 +5,6 @@ import { NativePurchases, PURCHASE_TYPE } from '@capgo/native-purchases';
 import { useAuth } from '../lib/AuthContext';
 import { toast } from 'sonner';
 
-const isAndroidApp = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
-
 const googlePlayProducts = {
   bronze: 'credits_bronze',
   silver: 'credits_silver',
@@ -28,7 +26,7 @@ export default function BuyCredits() {
   const { logout, user, setUser } = useAuth();
   const [loading, setLoading] = useState(null);
   const [nativePrices, setNativePrices] = useState({});
-  const useGooglePlayBilling = isAndroidApp();
+  const [useGooglePlayBilling, setUseGooglePlayBilling] = useState(false);
 
   const plans = [
     { id: 'bronze', name: 'Bronze', credits: 16, price: '€2.99', icon: '/wp/lefimovart/icons/128_Bronze.png' },
@@ -39,15 +37,41 @@ export default function BuyCredits() {
   ];
 
   useEffect(() => {
-    if (useGooglePlayBilling) {
-      loadGooglePlayPrices();
-      return;
-    }
+    const initBilling = async () => {
+      console.log("Initializing billing check...");
+      const platform = Capacitor.getPlatform();
+      console.log("Current platform detected by Capacitor:", platform);
 
-    const sessionId = searchParams.get('session_id');
-    if (sessionId) {
-      verifyPayment(sessionId);
-    }
+      const isAndroid = platform === 'android';
+      if (isAndroid) {
+        try {
+          console.log("Platform is Android, checking for billing support...");
+          const billing = await NativePurchases.isBillingSupported();
+          console.log("Billing support result:", billing);
+
+          if (billing.isBillingSupported) {
+            console.log("Google Play Billing supported, loading prices.");
+            setUseGooglePlayBilling(true);
+            await loadGooglePlayPrices();
+            return;
+          } else {
+            console.warn("Google Play Billing NOT supported on this device/configuration.");
+          }
+        } catch (e) {
+          console.error("Native billing support check failed with error:", e);
+        }
+      } else {
+        console.log("Platform is NOT Android (according to Capacitor), falling back to Stripe check.");
+      }
+
+      // If not android or billing not supported, check for stripe redirect
+      const sessionId = searchParams.get('session_id');
+      if (sessionId) {
+        verifyPayment(sessionId);
+      }
+    };
+
+    initBilling();
   }, []);
 
   const refreshUser = async () => {
@@ -60,12 +84,6 @@ export default function BuyCredits() {
 
   const loadGooglePlayPrices = async () => {
     try {
-      const billing = await NativePurchases.isBillingSupported();
-      if (!billing.isBillingSupported) {
-        toast.error('Google Play Billing is not available on this device.');
-        return;
-      }
-
       const { products } = await NativePurchases.getProducts({
         productIdentifiers: Object.values(googlePlayProducts),
         productType: PURCHASE_TYPE.INAPP,
@@ -77,7 +95,7 @@ export default function BuyCredits() {
       });
       setNativePrices(prices);
     } catch (e) {
-      toast.error(e.message || 'Could not load Google Play products');
+      console.error("Could not load Google Play products:", e);
     }
   };
 
