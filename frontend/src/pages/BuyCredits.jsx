@@ -176,12 +176,19 @@ export default function BuyCredits() {
   const handleBuyCredits = async (plan) => {
     setLoading(plan);
     try {
-      if (useGooglePlayBilling) {
+      const isAndroid = Capacitor.getPlatform() === 'android';
+
+      // Dacă suntem pe Android, FORȚĂM calea Google Play.
+      // Nu permitem fallback la Stripe pentru a respecta politicile Play Store.
+      if (isAndroid) {
+        console.log("Android detected: forcing Google Play path.");
         await buyWithGooglePlay(plan);
         setLoading(null);
         return;
       }
 
+      // Doar pe web/iOS (non-Android) folosim Stripe
+      console.log("Non-Android platform: using Stripe.");
       const res = await fetch('/wp/lefimovart/api/payments/create_checkout.php', {
         method: 'POST',
         headers: {
@@ -194,6 +201,7 @@ export default function BuyCredits() {
       if (!data.ok) throw new Error(data.error);
       window.location.href = data.checkout_url;
     } catch (e) {
+      console.error("Purchase error:", e);
       toast.error(e.message || 'Failed to start checkout');
       setLoading(null);
     }
