@@ -93,7 +93,7 @@ export default function SettingsPage() {
           <AppLogo className="w-14 h-14 rounded-xl shrink-0" />
           <div className="text-left leading-tight">
             <p className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">LefiMovArt</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">V1.1.0</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">v3.40.0</p>
           </div>
           <div className="ml-auto flex items-center gap-3">
             <div className="text-right leading-tight">
