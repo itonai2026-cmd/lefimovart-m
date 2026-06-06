@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">LefiMovArt</string>
     <string name="title_activity_main">LefiMovArt</string>
-    <string name="package_name">ro.itonai.lefimovart</string>
-    <string name="custom_url_scheme">ro.itonai.lefimovart</string>
+    <string name="package_name">com.base69d957b1d1de59180c2bc0d5.app</string>
+    <string name="custom_url_scheme">com.base69d957b1d1de59180c2bc0d5.app</string>
 </resources>

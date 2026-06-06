@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "ro.itonai.lefimovart"
+    namespace = "com.base69d957b1d1de59180c2bc0d5.app"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "ro.itonai.lefimovart"
+        applicationId "com.base69d957b1d1de59180c2bc0d5.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
