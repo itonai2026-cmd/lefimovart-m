@@ -30,6 +30,7 @@ Editează `.env` și adaugă credențialele:
 - `STRIPE_SECRET_KEY` (pentru plăți web)
 - `STRIPE_PRICE_*` pentru fiecare plan din catalogul Stripe
 - `GOOGLE_PLAY_*` pentru verificarea achizițiilor Android în Google Play
+- `BASE44_LEGACY_*` pentru migrarea parolelor la primul login al userilor importați din Base44
 
 Pentru fallback-ul OpenAI, creează un **Project API key** în dashboard-ul OpenAI, din `API keys`, apoi adaugă cheia numai în `.env` pe server. Aplicația încearcă întâi Fal.AI; OpenAI este apelat numai dacă Fal.AI returnează eroare:
 
@@ -191,6 +192,14 @@ GOOGLE_PLAY_PRODUCT_SILVER=credits_silver
 GOOGLE_PLAY_PRODUCT_GOLD=credits_gold
 GOOGLE_PLAY_PRODUCT_DIAMOND=credits_diamond
 GOOGLE_PLAY_PRODUCT_RHODIUM=credits_rhodium
+
+# Optional: first-login password migration for users imported from Base44.
+# The legacy password is verified against Base44, then saved locally as bcrypt.
+# Google-only Base44 users do not have a password to migrate; they are linked by Google OAuth.
+BASE44_LEGACY_AUTH_ENABLED=true
+BASE44_LEGACY_APP_ID=your_legacy_base44_app_id
+BASE44_LEGACY_BASE_URL=https://lefi-m.base44.app
+BASE44_LEGACY_LOGIN_PATH=/api/apps/{appId}/auth/login
 ```
 
 Configurează în Stripe Dashboard webhook-ul către:

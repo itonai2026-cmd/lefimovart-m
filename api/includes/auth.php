@@ -7,6 +7,7 @@
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/jwt.php';
 require_once __DIR__ . '/email.php';
+require_once __DIR__ . '/base44_legacy_auth.php';
 
 function ensure_users_accepted_terms_column(): void {
     global $pdo;
@@ -85,8 +86,30 @@ function login_user(string $email, string $password): array {
     $stmt->execute([$email]);
     $user = $stmt->fetch();
     
-    if (!$user || !password_verify($password, $user['password_hash'])) {
+    if (!$user) {
         return ['ok' => false, 'error' => 'Incorrect email or password.'];
+    }
+
+    $hasLocalPassword = !empty($user['password_hash']);
+
+    if ($hasLocalPassword && !password_verify($password, $user['password_hash'])) {
+        return ['ok' => false, 'error' => 'Incorrect email or password.'];
+    }
+
+    if (!$hasLocalPassword) {
+        $legacyAuth = authenticate_base44_legacy_user($email, $password);
+        if (!$legacyAuth['ok']) {
+            return ['ok' => false, 'error' => 'Incorrect email or password.'];
+        }
+
+        $hash = password_hash($password, PASSWORD_BCRYPT);
+        $upd = $pdo->prepare(
+            'UPDATE users
+             SET password_hash = ?, is_verified = 1
+             WHERE id = ? AND (password_hash IS NULL OR password_hash = ?)'
+        );
+        $upd->execute([$hash, $user['id'], '']);
+        $user['is_verified'] = 1;
     }
     
     if (!$user['is_verified']) {
@@ -130,16 +153,25 @@ function google_oauth_login(string $code): array {
     $google_id = $user_info['id'];
     $name = $user_info['name'] ?? '';
     
-    // Find or create user
-    $stmt = $pdo->prepare('SELECT id, is_verified FROM users WHERE email = ? OR google_id = ?');
-    $stmt->execute([$email, $google_id]);
+    // Find by Google ID first, then link imported Base44 users by verified email.
+    $stmt = $pdo->prepare('SELECT id, is_verified, google_id FROM users WHERE google_id = ?');
+    $stmt->execute([$google_id]);
     $user = $stmt->fetch();
+
+    if (!$user) {
+        $stmt = $pdo->prepare('SELECT id, is_verified, google_id FROM users WHERE email = ?');
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
+    }
     
     if ($user) {
-        // Update google_id if not set
-        if (!$user['is_verified']) {
-            $upd = $pdo->prepare('UPDATE users SET is_verified = 1, google_id = ? WHERE email = ?');
-            $upd->execute([$google_id, $email]);
+        if (empty($user['google_id']) || !$user['is_verified']) {
+            $upd = $pdo->prepare(
+                'UPDATE users
+                 SET google_id = ?, is_verified = 1
+                 WHERE id = ? AND (google_id IS NULL OR google_id = ? OR google_id = ?)'
+            );
+            $upd->execute([$google_id, $user['id'], '', $google_id]);
         }
         $user_id = $user['id'];
     } else {

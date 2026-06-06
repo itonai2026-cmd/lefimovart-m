@@ -67,6 +67,13 @@ define('MAX_UPLOAD_SIZE', 50 * 1024 * 1024); // 50 MB
 define('JWT_SECRET', getenv('JWT_SECRET') ?: 'unsafe_default_key_change_me');
 define('JWT_EXPIRE', 86400 * 7); // 7 days
 
+// Legacy Base44 auth migration. Used only for imported users without a local password_hash.
+define('BASE44_LEGACY_AUTH_ENABLED', filter_var(getenv('BASE44_LEGACY_AUTH_ENABLED') ?: false, FILTER_VALIDATE_BOOLEAN));
+define('BASE44_LEGACY_APP_ID', getenv('BASE44_LEGACY_APP_ID') ?: '');
+define('BASE44_LEGACY_BASE_URL', rtrim(getenv('BASE44_LEGACY_BASE_URL') ?: 'https://lefi-m.base44.app', '/'));
+define('BASE44_LEGACY_LOGIN_PATH', getenv('BASE44_LEGACY_LOGIN_PATH') ?: '/api/apps/{appId}/auth/login');
+define('BASE44_LEGACY_TIMEOUT', max(3, (int)(getenv('BASE44_LEGACY_TIMEOUT') ?: 10)));
+
 // ─── AI APIs ──────────────────────────────────────────────────────────────
 define('OPENAI_API_KEY', getenv('OPENAI_API_KEY') ?: '');
 define('OPENAI_IMAGE_MODEL', getenv('OPENAI_IMAGE_MODEL') ?: 'gpt-image-1.5');
