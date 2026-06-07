@@ -6,11 +6,11 @@ import { useAuth } from '../lib/AuthContext';
 import { toast } from 'sonner';
 
 const googlePlayProducts = {
-  bronze: 'credits_bronze',
-  silver: 'credits_silver',
-  gold: 'credits_gold',
-  diamond: 'credits_diamond',
-  rhodium: 'credits_rhodium',
+  bronze: 'lefimovart_credits_bronze',
+  silver: 'lefimovart_credits_silver',
+  gold: 'lefimovart_credits_gold',
+  diamond: 'lefimovart_credits_diamond',
+  rhodium: 'lefimovart_credits_rhodium',
 };
 
 const ANDROID_APP_USER_AGENT = 'LefiMovArtAndroid';
@@ -20,8 +20,6 @@ const GOOGLE_PLAY_BILLING_UNAVAILABLE =
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const getUserAgent = () => (typeof window === 'undefined' ? '' : window.navigator.userAgent);
-
-const isAndroidUserAgent = () => /Android/i.test(getUserAgent());
 
 const isAndroidAppUserAgent = () => getUserAgent().includes(ANDROID_APP_USER_AGENT);
 
@@ -34,17 +32,21 @@ const getCapacitorPlatform = () => {
   }
 };
 
+// Only the wrapped Capacitor Android app must use Google Play Billing (Play policy).
+// A plain Android *browser* (no Capacitor native bridge) must fall back to Stripe,
+// so we deliberately do NOT treat a generic "Android" user agent as the app.
 const isNativeAndroidRuntime = () => {
   if (typeof window === 'undefined') return false;
 
   const globalCapacitor = window.Capacitor;
   const globalPlatform = globalCapacitor?.getPlatform?.();
+  const isNativePlatform = globalCapacitor?.isNativePlatform?.() === true;
 
   return (
     getCapacitorPlatform() === 'android' ||
     globalPlatform === 'android' ||
+    (isNativePlatform && globalPlatform !== 'web') ||
     Boolean(window.androidBridge) ||
-    isAndroidUserAgent() ||
     isAndroidAppUserAgent()
   );
 };

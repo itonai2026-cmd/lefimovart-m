@@ -68,3 +68,66 @@ function authenticate_base44_legacy_user(string $email, string $password): array
 
     return ['ok' => true, 'data' => $data];
 }
+
+/**
+ * Extract a display name from a Base44 legacy auth response, if present.
+ */
+function base44_legacy_extract_name(array $data): string {
+    $candidates = [
+        $data['user']['full_name'] ?? null,
+        $data['user']['name'] ?? null,
+        $data['full_name'] ?? null,
+        $data['name'] ?? null,
+    ];
+    foreach ($candidates as $candidate) {
+        if (is_string($candidate) && trim($candidate) !== '') {
+            return trim($candidate);
+        }
+    }
+    return '';
+}
+
+/**
+ * Provision a local account for a user that still exists only in Base44.
+ *
+ * Used at login time for users who registered on Base44 after the initial
+ * import. The submitted credentials are verified against Base44; on success a
+ * local verified account is created and the password is captured as bcrypt.
+ *
+ * @return array{ok: bool, user_id?: int, error?: string}
+ */
+function migrate_base44_user_on_login(string $email, string $password): array {
+    global $pdo;
+
+    if (!base44_legacy_auth_configured()) {
+        return ['ok' => false, 'error' => 'Legacy Base44 auth is not configured.'];
+    }
+
+    $email = trim(strtolower($email));
+
+    $legacyAuth = authenticate_base44_legacy_user($email, $password);
+    if (!$legacyAuth['ok']) {
+        return ['ok' => false, 'error' => $legacyAuth['error'] ?? 'Legacy auth rejected credentials.'];
+    }
+
+    $hash = password_hash($password, PASSWORD_BCRYPT);
+    $name = base44_legacy_extract_name($legacyAuth['data'] ?? []);
+
+    try {
+        $ins = $pdo->prepare(
+            'INSERT INTO users (email, password_hash, name, is_verified) VALUES (?, ?, ?, 1)'
+        );
+        $ins->execute([$email, $hash, $name]);
+        return ['ok' => true, 'user_id' => (int)$pdo->lastInsertId()];
+    } catch (Throwable $e) {
+        // A concurrent request may have created the row first; reuse it.
+        $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
+        $stmt->execute([$email]);
+        $existing = $stmt->fetch();
+        if ($existing) {
+            return ['ok' => true, 'user_id' => (int)$existing['id']];
+        }
+        error_log('Base44 user migration insert failed for ' . $email . ': ' . $e->getMessage());
+        return ['ok' => false, 'error' => 'Could not create local account.'];
+    }
+}

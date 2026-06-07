@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Coins, Image, ImagePlus, Users, Video, Plus, RefreshCw, Search, ShieldCheck } from "lucide-react";
+import { ChevronLeft, Coins, Image, ImagePlus, Users, Video, Plus, RefreshCw, Search, ShieldCheck, CreditCard, CheckCircle2, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useAuth } from "../lib/AuthContext";
@@ -17,6 +17,7 @@ const tabs = [
   { name: "users", label: "Users", icon: Users },
   { name: "images", label: "Images", icon: Image },
   { name: "videos", label: "Videos", icon: Video },
+  { name: "googleplay", label: "Google Play", icon: CreditCard },
 ];
 
 export default function AdminPanel() {
@@ -29,6 +30,8 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("credits");
+  const [gpStatus, setGpStatus] = useState(null);
+  const [gpChecking, setGpChecking] = useState(false);
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -78,6 +81,25 @@ export default function AdminPanel() {
     }
   };
 
+  const checkGooglePlay = async () => {
+    setGpChecking(true);
+    setGpStatus(null);
+    try {
+      const res = await fetch("/wp/lefimovart/api/admin/google_play_status.php", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "Check failed");
+      setGpStatus(data);
+      if (data.configured) toast.success("Google Play Billing is configured correctly.");
+      else toast.error("Google Play Billing is not fully configured.");
+    } catch (err) {
+      toast.error(err.message || "Check failed");
+    } finally {
+      setGpChecking(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -110,7 +132,7 @@ export default function AdminPanel() {
         </div>
 
         {/* Tab Bar */}
-        <nav className="grid grid-cols-5 gap-2 mb-6">
+        <nav className="grid grid-cols-6 gap-2 mb-6">
           {tabs.map(({ name, label, icon: Icon }) => {
             const active = activeTab === name;
             return (
@@ -238,6 +260,56 @@ export default function AdminPanel() {
           {/* Videos Tab */}
           {activeTab === "videos" && (
             <VideosTable />
+          )}
+
+          {/* Google Play Tab */}
+          {activeTab === "googleplay" && (
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-800 p-6 flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Google Play Billing</h2>
+                <button
+                  onClick={checkGooglePlay}
+                  disabled={gpChecking}
+                  className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl px-4 min-h-[44px] font-medium shadow disabled:opacity-40 flex items-center justify-center"
+                >
+                  {gpChecking ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+                  Verifică Google Play
+                </button>
+              </div>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Verifică dacă service account-ul e citit corect și dacă autentificarea la Google Play API reușește. Nu expune cheia.
+              </p>
+
+              {gpStatus && (
+                <div className="flex flex-col gap-3 mt-2">
+                  <div className={`flex items-center gap-2 rounded-xl px-4 py-3 ${gpStatus.configured ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300" : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300"}`}>
+                    {gpStatus.configured ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                    <span className="font-semibold">{gpStatus.configured ? "Configurat corect — plățile Google Play funcționează." : "Neconfigurat complet — vezi detaliile de mai jos."}</span>
+                  </div>
+
+                  <dl className="text-sm divide-y divide-slate-100 dark:divide-slate-800 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <div className="flex justify-between px-4 py-2"><dt className="text-slate-500">Package name</dt><dd className="font-mono text-slate-800 dark:text-slate-200">{gpStatus.package_name}</dd></div>
+                    <div className="flex justify-between px-4 py-2"><dt className="text-slate-500">Service account source</dt><dd className="font-mono text-slate-800 dark:text-slate-200">{gpStatus.service_account?.source}</dd></div>
+                    {gpStatus.service_account?.source === "file" && (
+                      <div className="flex justify-between px-4 py-2 gap-4"><dt className="text-slate-500">Fișier citibil</dt><dd className="font-mono text-slate-800 dark:text-slate-200">{String(gpStatus.service_account?.file_readable)}</dd></div>
+                    )}
+                    {gpStatus.service_account?.client_email && (
+                      <div className="flex justify-between px-4 py-2 gap-4"><dt className="text-slate-500">Client email</dt><dd className="font-mono text-slate-800 dark:text-slate-200 break-all text-right">{gpStatus.service_account.client_email}</dd></div>
+                    )}
+                    {gpStatus.service_account?.project_id && (
+                      <div className="flex justify-between px-4 py-2"><dt className="text-slate-500">Project ID</dt><dd className="font-mono text-slate-800 dark:text-slate-200">{gpStatus.service_account.project_id}</dd></div>
+                    )}
+                    <div className="flex justify-between px-4 py-2"><dt className="text-slate-500">Token OAuth obținut</dt><dd className="font-mono text-slate-800 dark:text-slate-200">{String(gpStatus.token_ok)}</dd></div>
+                    {gpStatus.service_account?.parse_error && (
+                      <div className="flex justify-between px-4 py-2 gap-4"><dt className="text-slate-500">Eroare citire cheie</dt><dd className="text-red-500 text-right">{gpStatus.service_account.parse_error}</dd></div>
+                    )}
+                    {gpStatus.token_error && (
+                      <div className="flex justify-between px-4 py-2 gap-4"><dt className="text-slate-500">Eroare autentificare</dt><dd className="text-red-500 text-right">{gpStatus.token_error}</dd></div>
+                    )}
+                  </dl>
+                </div>
+              )}
+            </div>
           )}
 
         </motion.div>

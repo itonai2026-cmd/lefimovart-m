@@ -114,14 +114,14 @@ npm run android:open
 Pentru Play Store, creează produse consumabile de tip one-time product / in-app product cu aceleași ID-uri ca în `.env` și în frontend:
 
 ```text
-credits_bronze
-credits_silver
-credits_gold
-credits_diamond
-credits_rhodium
+lefimovart_credits_bronze
+lefimovart_credits_silver
+lefimovart_credits_gold
+lefimovart_credits_diamond
+lefimovart_credits_rhodium
 ```
 
-În aplicația web normală rămâne Stripe. În aplicația Android, pagina `Buy Credits` detectează Capacitor Android și folosește Google Play Billing. După cumpărare, frontend-ul trimite `product_id`, `purchase_token`, `order_id` și planul la backend; backend-ul verifică achiziția prin Google Play Developer API, acordă creditele o singură dată și consumă produsul ca să poată fi cumpărat din nou.
+Pe web (desktop **și** mobil în browser) se folosește Stripe. Doar în aplicația Android împachetată (Capacitor) pagina `Buy Credits` detectează runtime-ul nativ și folosește Google Play Billing. După cumpărare, frontend-ul trimite `product_id`, `purchase_token`, `order_id` și planul la backend; backend-ul verifică achiziția prin Google Play Developer API, acordă creditele o singură dată și consumă produsul ca să poată fi cumpărat din nou.
 
 Pentru verificare server-side, creează în Google Cloud/Play Console un service account cu acces la Google Play Android Developer API și setează una dintre variante:
 
@@ -185,16 +185,19 @@ STRIPE_PRICE_GOLD=price_***
 STRIPE_PRICE_DIAMOND=price_***
 STRIPE_PRICE_RHODIUM=price_***
 
-GOOGLE_PLAY_PACKAGE_NAME=ro.itonai.lefimovart
+GOOGLE_PLAY_PACKAGE_NAME=com.base69d957b1d1de59180c2bc0d5.app
 GOOGLE_PLAY_SERVICE_ACCOUNT_JSON={"type":"service_account",...}
-GOOGLE_PLAY_PRODUCT_BRONZE=credits_bronze
-GOOGLE_PLAY_PRODUCT_SILVER=credits_silver
-GOOGLE_PLAY_PRODUCT_GOLD=credits_gold
-GOOGLE_PLAY_PRODUCT_DIAMOND=credits_diamond
-GOOGLE_PLAY_PRODUCT_RHODIUM=credits_rhodium
+GOOGLE_PLAY_PRODUCT_BRONZE=lefimovart_credits_bronze
+GOOGLE_PLAY_PRODUCT_SILVER=lefimovart_credits_silver
+GOOGLE_PLAY_PRODUCT_GOLD=lefimovart_credits_gold
+GOOGLE_PLAY_PRODUCT_DIAMOND=lefimovart_credits_diamond
+GOOGLE_PLAY_PRODUCT_RHODIUM=lefimovart_credits_rhodium
 
-# Optional: first-login password migration for users imported from Base44.
+# Optional: first-login password migration for users coming from Base44.
 # The legacy password is verified against Base44, then saved locally as bcrypt.
+# Works for users imported into MySQL (empty password_hash) AND for users who
+# registered on Base44 after the import (no local row yet) — the latter get a
+# verified local account created automatically on their first successful login.
 # Google-only Base44 users do not have a password to migrate; they are linked by Google OAuth.
 BASE44_LEGACY_AUTH_ENABLED=true
 BASE44_LEGACY_APP_ID=your_legacy_base44_app_id
