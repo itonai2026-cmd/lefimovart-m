@@ -295,15 +295,15 @@ define('PLAN_PRICE_IDS', [
 ]);
 
 // ─── Google Play Billing ─────────────────────────────────────────────────
-define('GOOGLE_PLAY_PACKAGE_NAME', getenv('GOOGLE_PLAY_PACKAGE_NAME') ?: 'ro.itonai.lefimovart');
+define('GOOGLE_PLAY_PACKAGE_NAME', getenv('GOOGLE_PLAY_PACKAGE_NAME') ?: 'com.base69d957b1d1de59180c2bc0d5.app');
 define('GOOGLE_PLAY_SERVICE_ACCOUNT_JSON', getenv('GOOGLE_PLAY_SERVICE_ACCOUNT_JSON') ?: '');
 define('GOOGLE_PLAY_SERVICE_ACCOUNT_FILE', getenv('GOOGLE_PLAY_SERVICE_ACCOUNT_FILE') ?: '');
 define('GOOGLE_PLAY_PRODUCT_IDS', [
-    'bronze'  => getenv('GOOGLE_PLAY_PRODUCT_BRONZE') ?: 'credits_bronze',
-    'silver'  => getenv('GOOGLE_PLAY_PRODUCT_SILVER') ?: 'credits_silver',
-    'gold'    => getenv('GOOGLE_PLAY_PRODUCT_GOLD') ?: 'credits_gold',
-    'diamond' => getenv('GOOGLE_PLAY_PRODUCT_DIAMOND') ?: 'credits_diamond',
-    'rhodium' => getenv('GOOGLE_PLAY_PRODUCT_RHODIUM') ?: 'credits_rhodium',
+    'bronze'  => getenv('GOOGLE_PLAY_PRODUCT_BRONZE') ?: 'lefimovart_credits_bronze',
+    'silver'  => getenv('GOOGLE_PLAY_PRODUCT_SILVER') ?: 'lefimovart_credits_silver',
+    'gold'    => getenv('GOOGLE_PLAY_PRODUCT_GOLD') ?: 'lefimovart_credits_gold',
+    'diamond' => getenv('GOOGLE_PLAY_PRODUCT_DIAMOND') ?: 'lefimovart_credits_diamond',
+    'rhodium' => getenv('GOOGLE_PLAY_PRODUCT_RHODIUM') ?: 'lefimovart_credits_rhodium',
 ]);
 
 // ─── CORS Headers ────────────────────────────────────────────────────────

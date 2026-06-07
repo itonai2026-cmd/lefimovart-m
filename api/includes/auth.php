@@ -85,8 +85,15 @@ function login_user(string $email, string $password): array {
     $stmt = $pdo->prepare('SELECT id, password_hash, is_verified FROM users WHERE email = ?');
     $stmt->execute([$email]);
     $user = $stmt->fetch();
-    
+
     if (!$user) {
+        // Account may still live only in Base44 (e.g. a user who registered there
+        // after the initial import). Validate against Base44 and, on success,
+        // provision a local account capturing the password as a bcrypt hash.
+        $migrated = migrate_base44_user_on_login($email, $password);
+        if ($migrated['ok']) {
+            return ['ok' => true, 'token' => generate_jwt_token($migrated['user_id'])];
+        }
         return ['ok' => false, 'error' => 'Incorrect email or password.'];
     }
 
